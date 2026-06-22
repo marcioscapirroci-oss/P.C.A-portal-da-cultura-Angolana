@@ -2,13 +2,32 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ARTICLES } from "@/lib/content";
+import { ARTICLES, JOURNALIST } from "@/lib/content";
+import { getPublishedArticle } from "@/lib/public-articles.functions";
 
 export const Route = createFileRoute("/artigo/$slug")({
-  loader: ({ params }) => {
-    const article = ARTICLES.find((a) => a.slug === params.slug);
-    if (!article) throw notFound();
-    return { article };
+  loader: async ({ params }) => {
+    const { article: dbArticle } = await getPublishedArticle({ data: { slug: params.slug } });
+    if (dbArticle) {
+      return {
+        article: {
+          slug: dbArticle.slug,
+          title: dbArticle.title,
+          excerpt: dbArticle.excerpt ?? "",
+          category: dbArticle.category,
+          image: dbArticle.cover_image ?? JOURNALIST.photos.group,
+          author: "Analtino Santos",
+          date: dbArticle.published_at
+            ? new Date(dbArticle.published_at).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" })
+            : "",
+          readTime: "5 min",
+          content: dbArticle.content ?? "",
+        },
+      };
+    }
+    const fallback = ARTICLES.find((a) => a.slug === params.slug);
+    if (!fallback) throw notFound();
+    return { article: { ...fallback, content: "" } };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -35,10 +54,42 @@ export const Route = createFileRoute("/artigo/$slug")({
   component: ArticlePage,
 });
 
+// Minimal, safe renderer for markdown images + <video> tags + paragraphs.
+// Strips any other HTML to avoid XSS.
+function renderContent(raw: string): string {
+  const escape = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  const blocks: string[] = [];
+  // Tokenize by media markers
+  const re = /(!\[[^\]]*\]\(([^)\s]+)\))|(<video\s+src="([^"]+)"[^>]*><\/video>)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(raw)) !== null) {
+    if (m.index > last) blocks.push(textBlock(raw.slice(last, m.index)));
+    if (m[2]) {
+      blocks.push(`<img src="${escape(m[2])}" alt="" class="my-6 w-full rounded-2xl" loading="lazy" />`);
+    } else if (m[4]) {
+      blocks.push(
+        `<video src="${escape(m[4])}" controls playsinline class="my-6 w-full rounded-2xl"></video>`,
+      );
+    }
+    last = re.lastIndex;
+  }
+  if (last < raw.length) blocks.push(textBlock(raw.slice(last)));
+  return blocks.join("\n");
+
+  function textBlock(t: string): string {
+    const paras = escape(t).split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+    return paras.map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`).join("");
+  }
+}
+
 function ArticlePage() {
   const { article } = Route.useLoaderData();
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const wa = `https://wa.me/?text=${encodeURIComponent(article.title + " — " + shareUrl)}`;
+  const html = article.content ? renderContent(article.content) : "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -64,10 +115,16 @@ function ArticlePage() {
           <img src={article.image} alt={article.title} className="h-full w-full object-cover" />
         </div>
 
-        <div className="prose prose-invert mt-10 max-w-none text-base leading-[1.85] text-foreground/90">
-          <p>Esta é uma demonstração do conteúdo editorial do portal. O sistema de gestão completo de artigos, comentários, agendamento e estatísticas será disponibilizado assim que o Lovable Cloud for activado — incluindo a área privada do jornalista com login seguro.</p>
-          <p>Entretanto, todas as páginas (categorias, perfis de artistas, vídeos, eventos e perfil do jornalista) já estão prontas e optimizadas para telemóvel, tablet e desktop.</p>
-        </div>
+        {html ? (
+          <div
+            className="prose prose-invert mt-10 max-w-none text-base leading-[1.85] text-foreground/90"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        ) : (
+          <div className="prose prose-invert mt-10 max-w-none text-base leading-[1.85] text-foreground/90">
+            <p>Conteúdo em preparação.</p>
+          </div>
+        )}
       </article>
 
       <SiteFooter />

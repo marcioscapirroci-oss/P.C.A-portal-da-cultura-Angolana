@@ -1,8 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, MapPin, Play, Share2, Sparkles } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS } from "@/lib/content";
+import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS, type Article as StaticArticle } from "@/lib/content";
+import { listPublishedArticles } from "@/lib/public-articles.functions";
+
+const publishedQuery = queryOptions({
+  queryKey: ["published-articles"],
+  queryFn: () => listPublishedArticles(),
+  staleTime: 60_000,
+});
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -14,13 +22,33 @@ export const Route = createFileRoute("/")({
       { property: "og:image", content: JOURNALIST.photos.group },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(publishedQuery),
+  errorComponent: () => <div className="p-8">Erro ao carregar.</div>,
+  notFoundComponent: () => <div className="p-8">Página não encontrada.</div>,
   component: Home,
 });
 
+type FeedArticle = StaticArticle;
+
 function Home() {
-  const featured = ARTICLES.find((a) => a.featured)!;
-  const latest = ARTICLES.filter((a) => !a.featured).slice(0, 4);
-  const interviews = ARTICLES.filter((a) => a.category === "Entrevistas");
+  const { data } = useSuspenseQuery(publishedQuery);
+  const published: FeedArticle[] = (data.articles ?? []).map((a) => ({
+    slug: a.slug,
+    title: a.title,
+    excerpt: a.excerpt ?? "",
+    category: a.category,
+    image: a.cover_image ?? JOURNALIST.photos.group,
+    author: "Analtino Santos",
+    date: a.published_at ? new Date(a.published_at).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" }) : "",
+    readTime: "5 min",
+  }));
+  // Published articles take priority; fall back to seeded demo content
+  const merged: FeedArticle[] = [...published, ...ARTICLES.filter((s) => !published.some((p) => p.slug === s.slug))];
+  const featured = published[0] ?? ARTICLES.find((a) => a.featured)!;
+  if (!("image" in featured)) (featured as any).image = JOURNALIST.photos.group;
+  const featuredSlug = featured.slug;
+  const latest = merged.filter((a) => a.slug !== featuredSlug).slice(0, 4);
+  const interviews = merged.filter((a) => a.category === "Entrevistas");
 
   return (
     <div className="min-h-screen bg-background">
