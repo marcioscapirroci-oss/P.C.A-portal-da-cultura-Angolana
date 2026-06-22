@@ -65,6 +65,9 @@ export function SiteFooter() {
               <li className="pt-2">
                 <Link to="/sobre" className="text-primary hover:underline">Sobre o jornalista →</Link>
               </li>
+              <li>
+                <Link to="/auth" className="text-muted-foreground hover:text-foreground">Acesso editorial</Link>
+              </li>
             </ul>
           </div>
         </div>
