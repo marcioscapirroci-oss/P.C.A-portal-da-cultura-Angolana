@@ -224,9 +224,17 @@ function EditorModal({
     status: initial.status ?? "draft",
     published_at: initial.published_at ?? null,
   });
+  const [picker, setPicker] = useState<null | "cover" | "content">(null);
 
   function set<K extends string>(k: K, v: any) {
     setForm((f: any) => ({ ...f, [k]: v }));
+  }
+
+  function insertIntoContent(asset: { url: string; mimeType: string }) {
+    const snippet = asset.mimeType.startsWith("video/")
+      ? `\n\n<video src="${asset.url}" controls playsinline style="width:100%;border-radius:14px"></video>\n\n`
+      : `\n\n![](${asset.url})\n\n`;
+    set("content", (form.content ?? "") + snippet);
   }
 
   function submit(e: React.FormEvent) {
@@ -276,9 +284,50 @@ function EditorModal({
               />
             </Field>
           )}
-          <Field label="Imagem de capa (URL)"><input value={form.cover_image} onChange={(e) => set("cover_image", e.target.value)} className={inputClass} placeholder="https://..." /></Field>
+
+          <Field label="Imagem de capa">
+            <div className="flex items-center gap-3">
+              <div className="h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-border bg-background">
+                {form.cover_image ? (
+                  <img src={form.cover_image} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="grid h-full w-full place-items-center text-[10px] text-muted-foreground">sem capa</div>
+                )}
+              </div>
+              <div className="flex flex-col gap-2">
+                <button type="button" onClick={() => setPicker("cover")} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium text-primary-foreground">
+                  Carregar / escolher
+                </button>
+                {form.cover_image && (
+                  <button type="button" onClick={() => set("cover_image", "")} className="text-[11px] text-muted-foreground hover:text-foreground">
+                    Remover
+                  </button>
+                )}
+              </div>
+            </div>
+          </Field>
+
           <Field label="Resumo"><textarea rows={2} maxLength={500} value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} className={inputClass} /></Field>
-          <Field label="Conteúdo"><textarea rows={8} maxLength={50000} value={form.content} onChange={(e) => set("content", e.target.value)} className={inputClass} /></Field>
+
+          <div>
+            <div className="mb-1 flex items-end justify-between">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">Conteúdo</span>
+              <button type="button" onClick={() => setPicker("content")} className="text-[11px] text-primary hover:underline">
+                + Inserir imagem ou vídeo
+              </button>
+            </div>
+            <textarea
+              rows={10}
+              maxLength={50000}
+              value={form.content}
+              onChange={(e) => set("content", e.target.value)}
+              className={inputClass}
+              placeholder="Escreva a matéria. Pode inserir imagens e vídeos pelo botão acima."
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Suporta markdown <code>![](url)</code> e tags <code>&lt;video&gt;</code>.
+            </p>
+          </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
@@ -288,6 +337,18 @@ function EditorModal({
           </button>
         </div>
       </form>
+
+      {picker && (
+        <MediaPicker
+          accept={picker === "cover" ? "image/*" : "image/*,video/*"}
+          onClose={() => setPicker(null)}
+          onSelect={(a) => {
+            if (picker === "cover") set("cover_image", a.url);
+            else insertIntoContent(a);
+            setPicker(null);
+          }}
+        />
+      )}
     </div>
   );
 }
