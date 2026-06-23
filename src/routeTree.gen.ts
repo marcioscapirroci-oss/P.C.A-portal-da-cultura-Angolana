@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as FaleComJornalistaRouteImport } from './routes/fale-com-jornalista'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
 import { Route as ArtistaSlugRouteImport } from './routes/artista.$slug'
 import { Route as ArtigoSlugRouteImport } from './routes/artigo.$slug'
+import { Route as AuthenticatedMensagensRouteImport } from './routes/_authenticated/mensagens'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const SobreRoute = SobreRouteImport.update({
@@ -27,6 +29,11 @@ const SobreRoute = SobreRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaleComJornalistaRoute = FaleComJornalistaRouteImport.update({
+  id: '/fale-com-jornalista',
+  path: '/fale-com-jornalista',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -58,6 +65,11 @@ const ArtigoSlugRoute = ArtigoSlugRouteImport.update({
   path: '/artigo/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedMensagensRoute = AuthenticatedMensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -67,9 +79,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/fale-com-jornalista': typeof FaleComJornalistaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/mensagens': typeof AuthenticatedMensagensRoute
   '/artigo/$slug': typeof ArtigoSlugRoute
   '/artista/$slug': typeof ArtistaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -77,9 +91,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/fale-com-jornalista': typeof FaleComJornalistaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/mensagens': typeof AuthenticatedMensagensRoute
   '/artigo/$slug': typeof ArtigoSlugRoute
   '/artista/$slug': typeof ArtistaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -89,9 +105,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/fale-com-jornalista': typeof FaleComJornalistaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/mensagens': typeof AuthenticatedMensagensRoute
   '/artigo/$slug': typeof ArtigoSlugRoute
   '/artista/$slug': typeof ArtistaSlugRoute
   '/categoria/$slug': typeof CategoriaSlugRoute
@@ -101,9 +119,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/fale-com-jornalista'
     | '/sitemap.xml'
     | '/sobre'
     | '/admin'
+    | '/mensagens'
     | '/artigo/$slug'
     | '/artista/$slug'
     | '/categoria/$slug'
@@ -111,9 +131,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/fale-com-jornalista'
     | '/sitemap.xml'
     | '/sobre'
     | '/admin'
+    | '/mensagens'
     | '/artigo/$slug'
     | '/artista/$slug'
     | '/categoria/$slug'
@@ -122,9 +144,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/fale-com-jornalista'
     | '/sitemap.xml'
     | '/sobre'
     | '/_authenticated/admin'
+    | '/_authenticated/mensagens'
     | '/artigo/$slug'
     | '/artista/$slug'
     | '/categoria/$slug'
@@ -134,6 +158,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  FaleComJornalistaRoute: typeof FaleComJornalistaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   ArtigoSlugRoute: typeof ArtigoSlugRoute
@@ -155,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fale-com-jornalista': {
+      id: '/fale-com-jornalista'
+      path: '/fale-com-jornalista'
+      fullPath: '/fale-com-jornalista'
+      preLoaderRoute: typeof FaleComJornalistaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -199,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArtigoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/mensagens': {
+      id: '/_authenticated/mensagens'
+      path: '/mensagens'
+      fullPath: '/mensagens'
+      preLoaderRoute: typeof AuthenticatedMensagensRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -211,10 +250,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedMensagensRoute: typeof AuthenticatedMensagensRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedMensagensRoute: AuthenticatedMensagensRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -224,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  FaleComJornalistaRoute: FaleComJornalistaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   ArtigoSlugRoute: ArtigoSlugRoute,
