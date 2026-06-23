@@ -9,8 +9,8 @@ const NAV = [
   { to: "/categoria/entrevistas", label: "Entrevistas" },
   { to: "/categoria/noticias", label: "Notícias" },
   { to: "/categoria/eventos", label: "Eventos" },
-  { to: "/categoria/celebridades", label: "Celebridades" },
   { to: "/sobre", label: "Sobre" },
+  { to: "/fale-com-jornalista", label: "Fale com o Jornalista" },
 ] as const;
 
 export function SiteHeader() {
@@ -43,6 +43,12 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            to="/auth"
+            className="hidden sm:inline-flex items-center rounded-full border border-border px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground transition hover:text-foreground hover:border-primary"
+          >
+            Entrar
+          </Link>
           <button className="grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition hover:text-foreground hover:border-primary">
             <Search className="h-4 w-4" />
           </button>

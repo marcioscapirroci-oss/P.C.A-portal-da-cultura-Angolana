@@ -1,6 +1,5 @@
-import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -11,51 +10,73 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: "/admin" });
+    if (data.user) throw redirect({ to: "/" });
   },
   head: () => ({
     meta: [
-      { title: "Acesso · Analtino Santos Media" },
-      { name: "description", content: "Área restrita do jornalista Analtino Santos." },
+      { title: "Entrar · Analtino Santos Media" },
+      { name: "description", content: "Crie a sua conta de leitor e junte-se à comunidade do jornalista Analtino Santos." },
     ],
   }),
   component: AuthPage,
 });
 
-const credSchema = z.object({
-  email: z.string().trim().email("Email inválido").max(255),
-  password: z.string().min(6, "Mínimo 6 caracteres").max(72),
-});
+type Identifier = "email" | "phone";
+
+function normalizePhone(input: string) {
+  const trimmed = input.trim().replace(/[\s-]/g, "");
+  if (trimmed.startsWith("+")) return trimmed;
+  // Default Angola country code if missing
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.startsWith("244")) return `+${digits}`;
+  return `+244${digits}`;
+}
 
 function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [identifier, setIdentifier] = useState<Identifier>("email");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = credSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0].message);
+    if (password.length < 6) {
+      toast.error("A palavra-passe deve ter pelo menos 6 caracteres");
       return;
     }
+    if (identifier === "email" && !/.+@.+\..+/.test(email)) {
+      toast.error("Email inválido");
+      return;
+    }
+    if (identifier === "phone" && phone.replace(/\D/g, "").length < 8) {
+      toast.error("Número de telefone inválido");
+      return;
+    }
+
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email: parsed.data.email,
-          password: parsed.data.password,
-          options: { emailRedirectTo: `${window.location.origin}/admin` },
-        });
+        const creds =
+          identifier === "email"
+            ? { email: email.trim(), password, options: { data: { full_name: fullName.trim() } } }
+            : { phone: normalizePhone(phone), password, options: { data: { full_name: fullName.trim() } } };
+        const { error } = await supabase.auth.signUp(creds as Parameters<typeof supabase.auth.signUp>[0]);
         if (error) throw error;
-        toast.success("Conta criada. Verifique o seu email para confirmar.");
+        toast.success(`Bem-vindo${fullName ? `, ${fullName.split(" ")[0]}` : ""}! Conta criada com sucesso.`);
+        navigate({ to: "/" });
       } else {
-        const { error } = await supabase.auth.signInWithPassword(parsed.data);
+        const creds =
+          identifier === "email"
+            ? { email: email.trim(), password }
+            : { phone: normalizePhone(phone), password };
+        const { error } = await supabase.auth.signInWithPassword(creds as Parameters<typeof supabase.auth.signInWithPassword>[0]);
         if (error) throw error;
         toast.success("Sessão iniciada");
-        navigate({ to: "/admin" });
+        navigate({ to: "/" });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro de autenticação");
@@ -68,7 +89,7 @@ function AuthPage() {
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/admin",
+        redirect_uri: window.location.origin + "/",
       });
       if (result.error) {
         toast.error("Erro ao iniciar sessão com Google");
@@ -76,7 +97,7 @@ function AuthPage() {
         return;
       }
       if (result.redirected) return;
-      navigate({ to: "/admin" });
+      navigate({ to: "/" });
     } catch {
       toast.error("Erro inesperado");
       setLoading(false);
@@ -86,11 +107,14 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <main className="mx-auto flex max-w-md flex-col container-px py-16">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-primary">Área restrita</p>
+      <main className="mx-auto flex max-w-md flex-col container-px py-12">
+        <Link to="/" className="text-xs text-muted-foreground">← Voltar</Link>
+        <p className="mt-6 text-[11px] uppercase tracking-[0.3em] text-primary">Comunidade</p>
         <h1 className="mt-2 font-display text-4xl">{mode === "signin" ? "Entrar" : "Criar conta"}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Acesso ao painel editorial do jornalista Analtino Santos.
+          {mode === "signin"
+            ? "Aceda à sua conta para comentar, guardar matérias e falar com o jornalista."
+            : "Junte-se à comunidade de leitores do Analtino Santos."}
         </p>
 
         <button
@@ -105,18 +129,60 @@ function AuthPage() {
           <span className="h-px flex-1 bg-border" /> ou <span className="h-px flex-1 bg-border" />
         </div>
 
+        <div className="mb-4 inline-flex self-start rounded-full border border-border p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => setIdentifier("email")}
+            className={`rounded-full px-4 py-1.5 transition ${identifier === "email" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            Email
+          </button>
+          <button
+            type="button"
+            onClick={() => setIdentifier("phone")}
+            className={`rounded-full px-4 py-1.5 transition ${identifier === "phone" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+          >
+            Telefone
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
-              placeholder="email@exemplo.ao"
-            />
-          </div>
+          {mode === "signup" && (
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Nome</label>
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
+                placeholder="O seu nome"
+              />
+            </div>
+          )}
+          {identifier === "email" ? (
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
+                placeholder="email@exemplo.ao"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Telefone</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
+                placeholder="+244 9XX XXX XXX"
+              />
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Palavra-passe</label>
             <input
@@ -126,8 +192,11 @@ function AuthPage() {
               required
               minLength={6}
               className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
-              placeholder="••••••••"
+              placeholder="Mínimo 6 caracteres"
             />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Pode usar apenas letras, apenas números, ou combinar ambos.
+            </p>
           </div>
           <button
             type="submit"
