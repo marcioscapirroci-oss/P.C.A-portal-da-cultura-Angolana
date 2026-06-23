@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { ArticleEngagement } from "@/components/ArticleEngagement";
 import { ARTICLES, JOURNALIST } from "@/lib/content";
 import { getPublishedArticle } from "@/lib/public-articles.functions";
 
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/artigo/$slug")({
     if (dbArticle) {
       return {
         article: {
+          id: dbArticle.id,
           slug: dbArticle.slug,
           title: dbArticle.title,
           excerpt: dbArticle.excerpt ?? "",
@@ -27,7 +29,7 @@ export const Route = createFileRoute("/artigo/$slug")({
     }
     const fallback = ARTICLES.find((a) => a.slug === params.slug);
     if (!fallback) throw notFound();
-    return { article: { ...fallback, content: "" } };
+    return { article: { id: "", ...fallback, content: "" } };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -125,6 +127,8 @@ function ArticlePage() {
             <p>Conteúdo em preparação.</p>
           </div>
         )}
+
+        {article.id && <ArticleEngagement articleId={article.id} />}
       </article>
 
       <SiteFooter />

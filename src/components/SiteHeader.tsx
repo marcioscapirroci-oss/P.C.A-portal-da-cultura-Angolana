@@ -9,8 +9,8 @@ const NAV = [
   { to: "/categoria/entrevistas", label: "Entrevistas" },
   { to: "/categoria/noticias", label: "Notícias" },
   { to: "/categoria/eventos", label: "Eventos" },
-  { to: "/categoria/celebridades", label: "Celebridades" },
   { to: "/sobre", label: "Sobre" },
+  { to: "/fale-com-jornalista", label: "Fale com o Jornalista" },
 ] as const;
 
 export function SiteHeader() {
