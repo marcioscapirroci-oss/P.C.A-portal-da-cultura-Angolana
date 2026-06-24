@@ -9,6 +9,7 @@ const NAV = [
   { to: "/categoria/entrevistas", label: "Entrevistas" },
   { to: "/categoria/noticias", label: "Notícias" },
   { to: "/categoria/eventos", label: "Eventos" },
+  { to: "/galeria", label: "Galeria" },
   { to: "/sobre", label: "Sobre" },
   { to: "/fale-com-jornalista", label: "Fale com o Jornalista" },
 ] as const;
