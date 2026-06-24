@@ -32,7 +32,7 @@ const PAGE_SIZE = 24;
 type Filter = "all" | "image" | "video";
 
 function GalleryPage() {
-  const { items } = Route.useLoaderData();
+  const { items } = Route.useLoaderData() as { items: GalleryItem[] };
   const [filter, setFilter] = useState<Filter>("all");
   const [page, setPage] = useState(1);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
