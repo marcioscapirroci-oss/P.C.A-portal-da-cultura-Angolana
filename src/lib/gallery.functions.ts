@@ -36,18 +36,20 @@ export const listGalleryMedia = createServerFn({ method: "GET" }).handler(
       .from("media")
       .createSignedUrls(paths, TEN_YEARS);
     if (e2) throw new Error(e2.message);
-    const items: GalleryItem[] = signed.map((s, i) => {
-      const mime = ((files[i].metadata as any)?.mimetype as string) ?? "";
-      return {
-        path: paths[i],
-        name: files[i].name,
-        url: s.signedUrl,
-        type: classify(mime, files[i].name),
-        mimeType: mime,
-        size: ((files[i].metadata as any)?.size as number) ?? 0,
-        createdAt: files[i].created_at ?? null,
-      };
-    });
-    return { items: items.filter((i) => i.type !== "other") };
+    const items: GalleryItem[] = signed
+      .map((s, i) => {
+        const mime = ((files[i].metadata as any)?.mimetype as string) ?? "";
+        return {
+          path: paths[i],
+          name: files[i].name,
+          url: s.signedUrl ?? "",
+          type: classify(mime, files[i].name),
+          mimeType: mime,
+          size: ((files[i].metadata as any)?.size as number) ?? 0,
+          createdAt: files[i].created_at ?? null,
+        };
+      })
+      .filter((i) => i.url && i.type !== "other");
+    return { items };
   },
 );
