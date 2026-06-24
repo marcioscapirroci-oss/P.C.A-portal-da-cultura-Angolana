@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as FaleComJornalistaRouteImport } from './routes/fale-com-jornalista'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -29,6 +30,11 @@ const SobreRoute = SobreRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GaleriaRoute = GaleriaRouteImport.update({
+  id: '/galeria',
+  path: '/galeria',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaleComJornalistaRoute = FaleComJornalistaRouteImport.update({
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/fale-com-jornalista': typeof FaleComJornalistaRoute
+  '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/fale-com-jornalista': typeof FaleComJornalistaRoute
+  '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/fale-com-jornalista': typeof FaleComJornalistaRoute
+  '/galeria': typeof GaleriaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/fale-com-jornalista'
+    | '/galeria'
     | '/sitemap.xml'
     | '/sobre'
     | '/admin'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/fale-com-jornalista'
+    | '/galeria'
     | '/sitemap.xml'
     | '/sobre'
     | '/admin'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/fale-com-jornalista'
+    | '/galeria'
     | '/sitemap.xml'
     | '/sobre'
     | '/_authenticated/admin'
@@ -159,6 +171,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   FaleComJornalistaRoute: typeof FaleComJornalistaRoute
+  GaleriaRoute: typeof GaleriaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   ArtigoSlugRoute: typeof ArtigoSlugRoute
@@ -180,6 +193,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/galeria': {
+      id: '/galeria'
+      path: '/galeria'
+      fullPath: '/galeria'
+      preLoaderRoute: typeof GaleriaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/fale-com-jornalista': {
@@ -266,6 +286,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   FaleComJornalistaRoute: FaleComJornalistaRoute,
+  GaleriaRoute: GaleriaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   ArtigoSlugRoute: ArtigoSlugRoute,
