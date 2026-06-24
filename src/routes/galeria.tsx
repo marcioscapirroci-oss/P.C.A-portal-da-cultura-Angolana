@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Play, X, Image as ImageIcon, Video as VideoIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, X, Image as ImageIcon, Video as VideoIcon, Download, Share2, Facebook, Link as LinkIcon, Check } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { listGalleryMedia, type GalleryItem } from "@/lib/gallery.functions";
@@ -225,7 +225,37 @@ function Lightbox({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, items.length]);
 
+  const [copied, setCopied] = useState(false);
+  useEffect(() => { setCopied(false); }, [index]);
+
   if (!current) return null;
+
+  const shareUrl = current.url;
+  const shareText = `${current.name} — Analtino Santos Media`;
+  const wa = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
+  const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+  const tw = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+  const tg = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+
+  async function nativeShare() {
+    if (typeof navigator !== "undefined" && (navigator as any).share) {
+      try { await (navigator as any).share({ title: shareText, url: shareUrl }); } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1600);
+      } catch {}
+    }
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {}
+  }
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md" role="dialog" aria-modal="true">
@@ -251,7 +281,7 @@ function Lightbox({
         <ChevronRight className="h-6 w-6" />
       </button>
 
-      <div className="flex h-full w-full items-center justify-center p-4 sm:p-10">
+      <div className="flex h-full w-full items-center justify-center p-4 pb-32 sm:p-10 sm:pb-32">
         {current.type === "image" ? (
           <img src={current.url} alt={current.name} className="max-h-full max-w-full rounded-lg object-contain" />
         ) : (
@@ -265,8 +295,68 @@ function Lightbox({
         )}
       </div>
 
-      <div className="absolute inset-x-0 bottom-4 z-10 px-6 text-center text-xs text-white/70">
-        {index + 1} / {items.length} · {current.name}
+      <div className="absolute inset-x-0 bottom-0 z-10 border-t border-white/10 bg-black/60 px-4 py-4 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-3">
+          <p className="text-center text-[11px] text-white/60">
+            {index + 1} / {items.length} · <span className="text-white/80">{current.name}</span>
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <a
+              href={wa}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-xs font-medium text-black hover:opacity-90"
+            >
+              <Share2 className="h-3.5 w-3.5" /> WhatsApp
+            </a>
+            <a
+              href={fb}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#1877F2] px-4 py-2 text-xs font-medium text-white hover:opacity-90"
+            >
+              <Facebook className="h-3.5 w-3.5" /> Facebook
+            </a>
+            <a
+              href={tw}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white hover:bg-white/20"
+            >
+              X / Twitter
+            </a>
+            <a
+              href={tg}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-[#229ED9] px-4 py-2 text-xs font-medium text-white hover:opacity-90"
+            >
+              Telegram
+            </a>
+            <button
+              onClick={copyLink}
+              className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white hover:bg-white/20"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <LinkIcon className="h-3.5 w-3.5" />}
+              {copied ? "Copiado" : "Copiar link"}
+            </button>
+            <button
+              onClick={nativeShare}
+              className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white hover:bg-white/20 sm:hidden"
+            >
+              <Share2 className="h-3.5 w-3.5" /> Partilhar
+            </button>
+            <a
+              href={current.url}
+              download={current.name}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium text-primary-foreground shadow-elegant"
+            >
+              <Download className="h-3.5 w-3.5" /> Descarregar
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );
