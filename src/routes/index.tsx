@@ -6,6 +6,11 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS, type Article as StaticArticle } from "@/lib/content";
 import { listPublishedArticles } from "@/lib/public-articles.functions";
 import heroAsset from "@/assets/hero-analtino.jpg.asset.json";
+import hero640 from "@/assets/hero-analtino-640.webp.asset.json";
+import hero1280 from "@/assets/hero-analtino-1280.webp.asset.json";
+import hero1920 from "@/assets/hero-analtino-1920.webp.asset.json";
+
+const heroSrcSet = `${hero640.url} 640w, ${hero1280.url} 1280w, ${hero1920.url} 1920w`;
 
 const publishedQuery = queryOptions({
   queryKey: ["published-articles"],
