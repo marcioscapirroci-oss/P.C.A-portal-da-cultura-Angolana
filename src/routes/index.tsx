@@ -58,8 +58,14 @@ function Home() {
       {/* HERO */}
       <section className="relative">
         <div className="relative h-[78vh] min-h-[560px] w-full overflow-hidden">
-          <img src={featured.image} alt={featured.title} className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-hero" />
+          <img
+            src={heroAsset.url}
+            alt="Analtino Santos com figura da cultura angolana"
+            loading="eager"
+            className="absolute inset-0 h-full w-full object-cover object-center motion-safe:animate-[heroZoom_18s_ease-out_forwards]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/55 to-background/90" />
+          <div className="absolute inset-0 bg-black/30" />
           <div className="absolute inset-x-0 bottom-0">
             <div className="mx-auto max-w-7xl container-px pb-12 md:pb-20">
               <Link
