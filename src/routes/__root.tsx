@@ -72,8 +72,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Analtino Santos Media — Jornalismo, Cultura e Música de Angola" },
       { name: "twitter:description", content: "Portal digital do jornalista Analtino Santos: entrevistas, reportagens, música, cultura e cobertura de eventos em Angola." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/22ad32c1-e0d4-41a5-854d-1aa1796faf03/id-preview-c1783e00--0df6e667-c89f-4159-ab14-f86a8adb6296.lovable.app-1782123928789.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/22ad32c1-e0d4-41a5-854d-1aa1796faf03/id-preview-c1783e00--0df6e667-c89f-4159-ab14-f86a8adb6296.lovable.app-1782123928789.png" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/e1e2b860-2631-4cce-919c-0feada56d7ac" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/e1e2b860-2631-4cce-919c-0feada56d7ac" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
