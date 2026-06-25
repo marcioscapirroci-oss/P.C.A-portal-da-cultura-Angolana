@@ -101,11 +101,10 @@ function AdminPage() {
         <SiteHeader />
         <div className="mx-auto max-w-xl container-px py-20 text-center">
           <ShieldAlert className="mx-auto h-10 w-10 text-primary" />
-          <h1 className="mt-4 font-display text-3xl">Conta sem permissão de redactor</h1>
+          <h1 className="mt-4 font-display text-3xl">Acesso restrito a jornalistas</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            A sua conta está autenticada mas ainda não tem o papel de <span className="text-primary">admin</span>.
-            Para activar, abra o painel da base de dados e adicione um registo em <code className="rounded bg-card px-1.5 py-0.5">user_roles</code> com
-            o seu <code className="rounded bg-card px-1.5 py-0.5">user_id</code> e o papel <code className="rounded bg-card px-1.5 py-0.5">admin</code>.
+            A sua conta está autenticada, mas não tem o papel de <span className="text-primary">jornalista</span>.
+            O painel administrativo é exclusivo da equipa editorial. Se acredita que isto é um erro, contacte o administrador da plataforma.
           </p>
           <button onClick={handleLogout} className="mt-6 inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm">
             <LogOut className="h-4 w-4" /> Sair
