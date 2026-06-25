@@ -21,65 +21,95 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-type Identifier = "email" | "phone";
-
-function normalizePhone(input: string) {
-  const trimmed = input.trim().replace(/[\s-]/g, "");
-  if (trimmed.startsWith("+")) return trimmed;
-  // Default Angola country code if missing
-  const digits = trimmed.replace(/\D/g, "");
-  if (digits.startsWith("244")) return `+${digits}`;
-  return `+244${digits}`;
+// Translate Supabase auth errors to clear Portuguese messages.
+function translateAuthError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("invalid login credentials")) return "Email ou palavra-passe incorretos.";
+  if (m.includes("user already registered") || m.includes("already been registered")) return "Este email já está registado. Tente iniciar sessão.";
+  if (m.includes("email not confirmed")) return "Confirme o seu email antes de iniciar sessão.";
+  if (m.includes("password should be at least")) return "A palavra-passe deve ter pelo menos 6 caracteres.";
+  if (m.includes("invalid email") || m.includes("unable to validate email")) return "Email inválido.";
+  if (m.includes("rate limit") || m.includes("too many")) return "Demasiadas tentativas. Aguarde alguns minutos.";
+  if (m.includes("network") || m.includes("failed to fetch")) return "Sem ligação ao servidor. Verifique a internet.";
+  if (m.includes("signup is disabled") || m.includes("signups not allowed")) return "Criação de contas temporariamente desativada.";
+  if (m.includes("database error")) return "Erro ao guardar a conta. Tente novamente.";
+  return message;
 }
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [identifier, setIdentifier] = useState<Identifier>("email");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!/.+@.+\..+/.test(cleanEmail)) {
+      toast.error("Introduza um email válido.");
+      return;
+    }
+
+    if (mode === "forgot") {
+      setLoading(true);
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("Enviámos um email com as instruções para recuperar a palavra-passe.");
+        setMode("signin");
+      } catch (err) {
+        toast.error(translateAuthError(err instanceof Error ? err.message : "Erro ao enviar email."));
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (password.length < 6) {
-      toast.error("A palavra-passe deve ter pelo menos 6 caracteres");
+      toast.error("A palavra-passe deve ter pelo menos 6 caracteres.");
       return;
     }
-    if (identifier === "email" && !/.+@.+\..+/.test(email)) {
-      toast.error("Email inválido");
-      return;
-    }
-    if (identifier === "phone" && phone.replace(/\D/g, "").length < 8) {
-      toast.error("Número de telefone inválido");
+
+    if (mode === "signup" && fullName.trim().length < 2) {
+      toast.error("Indique o seu nome.");
       return;
     }
 
     setLoading(true);
     try {
       if (mode === "signup") {
-        const creds =
-          identifier === "email"
-            ? { email: email.trim(), password, options: { data: { full_name: fullName.trim() } } }
-            : { phone: normalizePhone(phone), password, options: { data: { full_name: fullName.trim() } } };
-        const { error } = await supabase.auth.signUp(creds as Parameters<typeof supabase.auth.signUp>[0]);
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { full_name: fullName.trim() },
+          },
+        });
         if (error) throw error;
-        toast.success(`Bem-vindo${fullName ? `, ${fullName.split(" ")[0]}` : ""}! Conta criada com sucesso.`);
-        navigate({ to: "/" });
+        if (!data.session) {
+          toast.success("Conta criada. Confirme o seu email para continuar.");
+          setMode("signin");
+        } else {
+          toast.success(`Bem-vindo${fullName ? `, ${fullName.split(" ")[0]}` : ""}!`);
+          navigate({ to: "/" });
+        }
       } else {
-        const creds =
-          identifier === "email"
-            ? { email: email.trim(), password }
-            : { phone: normalizePhone(phone), password };
-        const { error } = await supabase.auth.signInWithPassword(creds as Parameters<typeof supabase.auth.signInWithPassword>[0]);
+        const { error } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password,
+        });
         if (error) throw error;
-        toast.success("Sessão iniciada");
+        toast.success("Sessão iniciada.");
         navigate({ to: "/" });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro de autenticação");
+      toast.error(translateAuthError(err instanceof Error ? err.message : "Erro de autenticação."));
     } finally {
       setLoading(false);
     }
@@ -92,17 +122,25 @@ function AuthPage() {
         redirect_uri: window.location.origin + "/",
       });
       if (result.error) {
-        toast.error("Erro ao iniciar sessão com Google");
+        toast.error("Não foi possível iniciar sessão com Google. Tente novamente.");
         setLoading(false);
         return;
       }
       if (result.redirected) return;
       navigate({ to: "/" });
     } catch {
-      toast.error("Erro inesperado");
+      toast.error("Erro inesperado ao iniciar sessão com Google.");
       setLoading(false);
     }
   }
+
+  const title = mode === "signin" ? "Entrar" : mode === "signup" ? "Criar conta" : "Recuperar palavra-passe";
+  const subtitle =
+    mode === "signin"
+      ? "Aceda à sua conta para comentar, guardar matérias e falar com o jornalista."
+      : mode === "signup"
+      ? "Junte-se à comunidade de leitores do Analtino Santos."
+      : "Indique o email da sua conta e enviaremos instruções para definir uma nova palavra-passe.";
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,110 +148,104 @@ function AuthPage() {
       <main className="mx-auto flex max-w-md flex-col container-px py-12">
         <Link to="/" className="text-xs text-muted-foreground">← Voltar</Link>
         <p className="mt-6 text-[11px] uppercase tracking-[0.3em] text-primary">Comunidade</p>
-        <h1 className="mt-2 font-display text-4xl">{mode === "signin" ? "Entrar" : "Criar conta"}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {mode === "signin"
-            ? "Aceda à sua conta para comentar, guardar matérias e falar com o jornalista."
-            : "Junte-se à comunidade de leitores do Analtino Santos."}
-        </p>
+        <h1 className="mt-2 font-display text-4xl">{title}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
 
-        <button
-          onClick={handleGoogle}
-          disabled={loading}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary disabled:opacity-50"
-        >
-          <GoogleIcon /> Continuar com Google
-        </button>
+        {mode !== "forgot" && (
+          <>
+            <button
+              onClick={handleGoogle}
+              disabled={loading}
+              className="mt-8 flex w-full items-center justify-center gap-3 rounded-full border border-border bg-card px-5 py-3 text-sm font-medium transition hover:border-primary disabled:opacity-50"
+            >
+              <GoogleIcon /> Continuar com Google
+            </button>
 
-        <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
-          <span className="h-px flex-1 bg-border" /> ou <span className="h-px flex-1 bg-border" />
-        </div>
+            <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+              <span className="h-px flex-1 bg-border" /> ou <span className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        )}
 
-        <div className="mb-4 inline-flex self-start rounded-full border border-border p-1 text-xs">
-          <button
-            type="button"
-            onClick={() => setIdentifier("email")}
-            className={`rounded-full px-4 py-1.5 transition ${identifier === "email" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-          >
-            Email
-          </button>
-          <button
-            type="button"
-            onClick={() => setIdentifier("phone")}
-            className={`rounded-full px-4 py-1.5 transition ${identifier === "phone" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-          >
-            Telefone
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="mt-2 space-y-4">
           {mode === "signup" && (
             <div>
               <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Nome</label>
               <input
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                required
+                autoComplete="name"
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
                 placeholder="O seu nome"
               />
             </div>
           )}
-          {identifier === "email" ? (
+          <div>
+            <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
+              placeholder="email@exemplo.ao"
+            />
+          </div>
+          {mode !== "forgot" && (
             <div>
-              <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Email</label>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="block text-xs uppercase tracking-wider text-muted-foreground">Palavra-passe</label>
+                {mode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={() => setMode("forgot")}
+                    className="text-[11px] text-primary hover:underline"
+                  >
+                    Esqueci-me
+                  </button>
+                )}
+              </div>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
-                placeholder="email@exemplo.ao"
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Telefone</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
-                placeholder="+244 9XX XXX XXX"
+                placeholder="Mínimo 6 caracteres"
               />
             </div>
           )}
-          <div>
-            <label className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">Palavra-passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm outline-none focus:border-primary"
-              placeholder="Mínimo 6 caracteres"
-            />
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Pode usar apenas letras, apenas números, ou combinar ambos.
-            </p>
-          </div>
           <button
             type="submit"
             disabled={loading}
             className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-gold px-5 py-3 text-sm font-medium text-primary-foreground shadow-elegant disabled:opacity-50"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {mode === "signin" ? "Entrar" : "Criar conta"}
+            {mode === "signin" ? "Entrar" : mode === "signup" ? "Criar conta" : "Enviar instruções"}
           </button>
         </form>
 
-        <button
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-6 text-sm text-muted-foreground hover:text-foreground"
-        >
-          {mode === "signin" ? "Não tem conta? Criar agora" : "Já tem conta? Entrar"}
-        </button>
+        <div className="mt-6 flex flex-col gap-2 text-sm text-muted-foreground">
+          {mode === "signin" && (
+            <button onClick={() => setMode("signup")} className="text-left hover:text-foreground">
+              Não tem conta? <span className="text-primary">Criar agora</span>
+            </button>
+          )}
+          {mode === "signup" && (
+            <button onClick={() => setMode("signin")} className="text-left hover:text-foreground">
+              Já tem conta? <span className="text-primary">Entrar</span>
+            </button>
+          )}
+          {mode === "forgot" && (
+            <button onClick={() => setMode("signin")} className="text-left hover:text-foreground">
+              ← Voltar ao início de sessão
+            </button>
+          )}
+        </div>
       </main>
     </div>
   );
