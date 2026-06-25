@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+const STAFF_ROLES = ["jornalista", "admin", "super_admin", "editor"] as const;
+
 async function assertStaff(ctx: { supabase: any; userId: string }) {
   const { data, error } = await ctx.supabase
     .from("user_roles")
@@ -9,8 +11,8 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
     .eq("user_id", ctx.userId);
   if (error) throw new Error(error.message);
   const roles = (data ?? []).map((r: { role: string }) => r.role);
-  if (!roles.includes("admin") && !roles.includes("editor")) {
-    throw new Error("Forbidden: precisa de papel de admin ou editor.");
+  if (!roles.some((r: string) => STAFF_ROLES.includes(r as any))) {
+    throw new Error("Forbidden: acesso restrito a jornalistas autenticados.");
   }
   return roles;
 }
