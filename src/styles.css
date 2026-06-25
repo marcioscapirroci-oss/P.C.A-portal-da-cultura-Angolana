@@ -98,3 +98,8 @@
   .container-px { padding-left: 1.25rem; padding-right: 1.25rem; }
   @media (min-width: 768px) { .container-px { padding-left: 2rem; padding-right: 2rem; } }
 }
+
+@keyframes heroZoom {
+  from { transform: scale(1.08); }
+  to { transform: scale(1); }
+}
