@@ -67,9 +67,15 @@ function Home() {
       <section className="relative">
         <div className="relative h-[78vh] min-h-[560px] w-full overflow-hidden">
           <img
-            src={heroAsset.url}
+            src={hero1280.url}
+            srcSet={heroSrcSet}
+            sizes="100vw"
             alt="Analtino Santos com figura da cultura angolana"
             loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            width={1280}
+            height={854}
             className="absolute inset-0 h-full w-full object-cover object-center motion-safe:animate-[heroZoom_18s_ease-out_forwards]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/55 to-background/90" />
