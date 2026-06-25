@@ -97,22 +97,29 @@ function AuthPage() {
           setMode("signin");
         } else {
           toast.success(`Bem-vindo${fullName ? `, ${fullName.split(" ")[0]}` : ""}!`);
-          navigate({ to: "/" });
+          await redirectByRole(data.session.user.id);
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
           password,
         });
         if (error) throw error;
         toast.success("Sessão iniciada.");
-        navigate({ to: "/" });
+        await redirectByRole(data.user.id);
       }
     } catch (err) {
       toast.error(translateAuthError(err instanceof Error ? err.message : "Erro de autenticação."));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function redirectByRole(userId: string) {
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const roles = (data ?? []).map((r) => r.role);
+    const isStaff = roles.some((r) => r === "jornalista" || r === "admin" || r === "super_admin" || r === "editor");
+    navigate({ to: isStaff ? "/admin" : "/" });
   }
 
   async function handleGoogle() {

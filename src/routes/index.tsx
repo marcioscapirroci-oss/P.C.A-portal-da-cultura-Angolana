@@ -5,7 +5,12 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS, type Article as StaticArticle } from "@/lib/content";
 import { listPublishedArticles } from "@/lib/public-articles.functions";
-import heroAsset from "@/assets/hero-analtino.jpg.asset.json";
+
+import hero640 from "@/assets/hero-analtino-640.webp.asset.json";
+import hero1280 from "@/assets/hero-analtino-1280.webp.asset.json";
+import hero1920 from "@/assets/hero-analtino-1920.webp.asset.json";
+
+const heroSrcSet = `${hero640.url} 640w, ${hero1280.url} 1280w, ${hero1920.url} 1920w`;
 
 const publishedQuery = queryOptions({
   queryKey: ["published-articles"],
@@ -20,7 +25,10 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Entrevistas exclusivas, reportagens e cobertura cultural de Angola pelo jornalista Analtino Santos." },
       { property: "og:title", content: "Analtino Santos Media" },
       { property: "og:description", content: "Entrevistas, reportagens e a cultura angolana em destaque." },
-      { property: "og:image", content: JOURNALIST.photos.group },
+      { property: "og:image", content: hero1280.url },
+    ],
+    links: [
+      { rel: "preload", as: "image", href: hero1280.url, imagesrcset: heroSrcSet, imagesizes: "100vw", fetchpriority: "high" },
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publishedQuery),
@@ -59,9 +67,15 @@ function Home() {
       <section className="relative">
         <div className="relative h-[78vh] min-h-[560px] w-full overflow-hidden">
           <img
-            src={heroAsset.url}
+            src={hero1280.url}
+            srcSet={heroSrcSet}
+            sizes="100vw"
             alt="Analtino Santos com figura da cultura angolana"
             loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            width={1280}
+            height={854}
             className="absolute inset-0 h-full w-full object-cover object-center motion-safe:animate-[heroZoom_18s_ease-out_forwards]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/55 to-background/90" />
