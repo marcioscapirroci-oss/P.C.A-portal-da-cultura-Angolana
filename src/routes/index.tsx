@@ -25,7 +25,10 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Entrevistas exclusivas, reportagens e cobertura cultural de Angola pelo jornalista Analtino Santos." },
       { property: "og:title", content: "Analtino Santos Media" },
       { property: "og:description", content: "Entrevistas, reportagens e a cultura angolana em destaque." },
-      { property: "og:image", content: JOURNALIST.photos.group },
+      { property: "og:image", content: hero1280.url },
+    ],
+    links: [
+      { rel: "preload", as: "image", href: hero1280.url, imagesrcset: heroSrcSet, imagesizes: "100vw", fetchpriority: "high" },
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publishedQuery),
