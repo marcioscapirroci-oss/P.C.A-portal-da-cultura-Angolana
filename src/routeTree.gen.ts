@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as FaleComJornalistaRouteImport } from './routes/fale-com-jornalista'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -30,6 +31,11 @@ const SobreRoute = SobreRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GaleriaRoute = GaleriaRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/fale-com-jornalista': typeof FaleComJornalistaRoute
   '/galeria': typeof GaleriaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/fale-com-jornalista': typeof FaleComJornalistaRoute
   '/galeria': typeof GaleriaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/fale-com-jornalista': typeof FaleComJornalistaRoute
   '/galeria': typeof GaleriaRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/fale-com-jornalista'
     | '/galeria'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
     | '/admin'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/fale-com-jornalista'
     | '/galeria'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
     | '/admin'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/fale-com-jornalista'
     | '/galeria'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
     | '/_authenticated/admin'
@@ -172,6 +184,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FaleComJornalistaRoute: typeof FaleComJornalistaRoute
   GaleriaRoute: typeof GaleriaRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   ArtigoSlugRoute: typeof ArtigoSlugRoute
@@ -193,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/galeria': {
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FaleComJornalistaRoute: FaleComJornalistaRoute,
   GaleriaRoute: GaleriaRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   ArtigoSlugRoute: ArtigoSlugRoute,
