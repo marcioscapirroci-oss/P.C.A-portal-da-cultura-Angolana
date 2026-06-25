@@ -53,7 +53,7 @@ function MessagesAdmin() {
       setUserId(user?.id ?? null);
       if (!user) return;
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      const staff = (roles ?? []).some((r) => r.role === "admin" || r.role === "super_admin");
+      const staff = (roles ?? []).some((r) => r.role === "jornalista" || r.role === "admin" || r.role === "super_admin");
       setIsStaff(staff);
       if (staff) await load();
     })();
