@@ -39,7 +39,7 @@ function AdminPage() {
   const [editing, setEditing] = useState<Partial<Article> | null>(null);
 
   const rolesQ = useQuery({ queryKey: ["my-roles"], queryFn: () => fetchRoles() });
-  const isStaff = rolesQ.data?.roles?.some((r) => r === "admin" || r === "editor");
+  const isStaff = rolesQ.data?.roles?.some((r) => r === "jornalista" || r === "admin" || r === "super_admin" || r === "editor");
 
   const listQ = useQuery({
     queryKey: ["admin-articles"],
