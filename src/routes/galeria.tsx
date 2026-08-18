@@ -8,10 +8,10 @@ import { listGalleryMedia, type GalleryItem } from "@/lib/gallery.functions";
 export const Route = createFileRoute("/galeria")({
   head: () => ({
     meta: [
-      { title: "Galeria multimédia — Analtino Santos Media" },
+      { title: "Galeria multimédia — PCArt — Plataforma da Cultura Angolana" },
       { name: "description", content: "Fotos e vídeos de reportagens, entrevistas e eventos cobertos por Analtino Santos." },
-      { property: "og:title", content: "Galeria multimédia — Analtino Santos Media" },
-      { property: "og:description", content: "Navegue pelas fotos e vídeos do portal Analtino Santos Media." },
+      { property: "og:title", content: "Galeria multimédia — PCArt — Plataforma da Cultura Angolana" },
+      { property: "og:description", content: "Navegue pelas fotos e vídeos do portal PCArt — Plataforma da Cultura Angolana." },
     ],
   }),
   loader: () => listGalleryMedia(),
@@ -231,7 +231,7 @@ function Lightbox({
   if (!current) return null;
 
   const shareUrl = current.url;
-  const shareText = `${current.name} — Analtino Santos Media`;
+  const shareText = `${current.name} — PCArt — Plataforma da Cultura Angolana`;
   const wa = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
   const fb = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
   const tw = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;

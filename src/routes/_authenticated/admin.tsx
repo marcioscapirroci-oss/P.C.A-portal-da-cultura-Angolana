@@ -17,7 +17,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Painel · Analtino Santos Media" }] }),
+  head: () => ({ meta: [{ title: "Painel · PCArt — Plataforma da Cultura Angolana" }] }),
   component: AdminPage,
 });
 
