@@ -21,9 +21,9 @@ const publishedQuery = queryOptions({
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Analtino Santos Media — Jornalismo, Cultura e Música de Angola" },
+      { title: "PCArt — Plataforma da Cultura Angolana — Jornalismo, Cultura e Música de Angola" },
       { name: "description", content: "Entrevistas exclusivas, reportagens e cobertura cultural de Angola pelo jornalista Analtino Santos." },
-      { property: "og:title", content: "Analtino Santos Media" },
+      { property: "og:title", content: "PCArt — Plataforma da Cultura Angolana" },
       { property: "og:description", content: "Entrevistas, reportagens e a cultura angolana em destaque." },
       { property: "og:image", content: hero1280.url },
     ],

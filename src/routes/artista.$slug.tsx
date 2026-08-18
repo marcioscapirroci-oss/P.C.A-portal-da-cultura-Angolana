@@ -13,7 +13,7 @@ export const Route = createFileRoute("/artista/$slug")({
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.artist.name} — Analtino Santos Media` },
+          { title: `${loaderData.artist.name} — PCArt — Plataforma da Cultura Angolana` },
           { name: "description", content: loaderData.artist.bio },
           { property: "og:title", content: loaderData.artist.name },
           { property: "og:description", content: loaderData.artist.bio },

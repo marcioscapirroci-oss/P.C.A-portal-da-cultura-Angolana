@@ -9,7 +9,7 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Nova palavra-passe · Analtino Santos Media" },
+      { title: "Nova palavra-passe · PCArt — Plataforma da Cultura Angolana" },
       { name: "robots", content: "noindex" },
     ],
   }),

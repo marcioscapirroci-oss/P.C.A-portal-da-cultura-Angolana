@@ -8,8 +8,8 @@ export const Route = createFileRoute("/categoria/$slug")({
     const label = decodeURIComponent(params.slug).replace(/^./, (c) => c.toUpperCase());
     return {
       meta: [
-        { title: `${label} — Analtino Santos Media` },
-        { name: "description", content: `Matérias da categoria ${label} no portal Analtino Santos Media.` },
+        { title: `${label} — PCArt — Plataforma da Cultura Angolana` },
+        { name: "description", content: `Matérias da categoria ${label} no portal PCArt — Plataforma da Cultura Angolana.` },
       ],
     };
   },

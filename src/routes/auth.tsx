@@ -14,7 +14,7 @@ export const Route = createFileRoute("/auth")({
   },
   head: () => ({
     meta: [
-      { title: "Entrar · Analtino Santos Media" },
+      { title: "Entrar · PCArt — Plataforma da Cultura Angolana" },
       { name: "description", content: "Crie a sua conta de leitor e junte-se à comunidade do jornalista Analtino Santos." },
     ],
   }),

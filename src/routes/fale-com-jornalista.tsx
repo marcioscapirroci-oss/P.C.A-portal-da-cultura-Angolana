@@ -10,7 +10,7 @@ export const Route = createFileRoute("/fale-com-jornalista")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Fale com o Jornalista · Analtino Santos Media" },
+      { title: "Fale com o Jornalista · PCArt — Plataforma da Cultura Angolana" },
       { name: "description", content: "Envie mensagens, sugestões de temas e opiniões diretamente ao jornalista Analtino Santos." },
     ],
   }),

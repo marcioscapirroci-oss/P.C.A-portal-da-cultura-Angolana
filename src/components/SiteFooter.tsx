@@ -12,7 +12,7 @@ export function SiteFooter() {
                 A
               </span>
               <div>
-                <p className="font-display text-xl">Analtino Santos Media</p>
+                <p className="font-display text-xl">PCArt — Plataforma da Cultura Angolana</p>
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Jornalismo · Cultura · Música</p>
               </div>
             </div>
@@ -73,7 +73,7 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} Analtino Santos Media. Todos os direitos reservados.</p>
+          <p>© {new Date().getFullYear()} PCArt — Plataforma da Cultura Angolana. Todos os direitos reservados.</p>
           <p>Feito com paixão em Luanda 🇦🇴</p>
         </div>
       </div>
