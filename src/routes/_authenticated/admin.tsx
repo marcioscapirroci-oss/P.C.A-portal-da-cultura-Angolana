@@ -12,6 +12,8 @@ import {
   listArticlesAdmin,
   upsertArticle,
 } from "@/lib/admin.functions";
+import { SiteSettingsPanel } from "@/components/SiteSettingsPanel";
+import { useSiteSettings } from "@/lib/site-settings";
 import { BarChart3, Eye, FileText, LogOut, Plus, Trash2, Loader2, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
