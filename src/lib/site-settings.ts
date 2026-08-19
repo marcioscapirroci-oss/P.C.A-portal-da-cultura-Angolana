@@ -4,6 +4,38 @@ import { supabase } from "@/integrations/supabase/client";
 export type NavItem = { label: string; to: string };
 export type CategoryItem = { label: string; slug: string };
 
+export type ArtistItem = { name: string; genre: string; slug: string; image: string };
+export type VideoItem = { title: string; duration: string; thumb: string };
+export type EventItem = { date: string; title: string; city: string };
+
+export type HomeSettings = {
+  hero_image: string;
+  hero_kicker: string;
+  hero_title: string;
+  hero_subtitle: string;
+  hero_cta_label: string;
+  hero_cta_to: string;
+  show_demo_articles: boolean;
+  show_latest: boolean;
+  show_interviews: boolean;
+  show_artists: boolean;
+  show_videos: boolean;
+  show_events: boolean;
+  show_ad: boolean;
+  show_journalist: boolean;
+  artists: ArtistItem[];
+  videos: VideoItem[];
+  events: EventItem[];
+  journalist_name: string;
+  journalist_role: string;
+  journalist_bio: string;
+  journalist_photo: string;
+  ad_kicker: string;
+  ad_title: string;
+  ad_text: string;
+  ad_email: string;
+};
+
 export type SiteSettings = {
   brand: string;
   tagline: string;
@@ -18,6 +50,36 @@ export type SiteSettings = {
   contact_phone: string;
   nav: NavItem[];
   categories: CategoryItem[];
+  home: HomeSettings;
+};
+
+export const DEFAULT_HOME: HomeSettings = {
+  hero_image: "",
+  hero_kicker: "",
+  hero_title: "",
+  hero_subtitle: "",
+  hero_cta_label: "",
+  hero_cta_to: "",
+  show_demo_articles: true,
+  show_latest: true,
+  show_interviews: true,
+  show_artists: true,
+  show_videos: true,
+  show_events: true,
+  show_ad: true,
+  show_journalist: true,
+  artists: [],
+  videos: [],
+  events: [],
+  journalist_name: "",
+  journalist_role: "",
+  journalist_bio: "",
+  journalist_photo: "",
+  ad_kicker: "Parcerias & publicidade",
+  ad_title: "Anuncie no portal de referência da cultura angolana",
+  ad_text:
+    "Espaços premium para marcas que querem comunicar com o público cultural mais qualificado de Angola.",
+  ad_email: "contacto@pcart.ao",
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -49,7 +111,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     { label: "Celebridades", slug: "celebridades" },
     { label: "Sociedade", slug: "sociedade" },
   ],
+  home: DEFAULT_HOME,
 };
+
 
 export const siteSettingsQueryKey = ["site-settings"] as const;
 
