@@ -242,6 +242,7 @@ function EditorModal({
   onSave: (data: any) => void;
   saving: boolean;
 }) {
+  const { settings } = useSiteSettings();
   const [form, setForm] = useState<any>({
     id: initial.id,
     title: initial.title ?? "",
