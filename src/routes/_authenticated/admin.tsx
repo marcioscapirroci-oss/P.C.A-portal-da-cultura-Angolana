@@ -124,21 +124,45 @@ function AdminPage() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary">Painel editorial</p>
-            <h1 className="mt-1 font-display text-3xl md:text-4xl">Gestão de matérias</h1>
+            <h1 className="mt-1 font-display text-3xl md:text-4xl">
+              {tab === "materias" ? "Gestão de matérias" : "Definições da plataforma"}
+            </h1>
           </div>
           <div className="flex shrink-0 gap-2">
-            <button
-              onClick={() => setEditing({ status: "draft", category: "Notícias" })}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-elegant"
-            >
-              <Plus className="h-4 w-4" /> Nova matéria
-            </button>
+            {tab === "materias" && (
+              <button
+                onClick={() => setEditing({ status: "draft", category: "Notícias" })}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-elegant"
+              >
+                <Plus className="h-4 w-4" /> Nova matéria
+              </button>
+            )}
             <button onClick={handleLogout} className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2.5 text-sm">
               <LogOut className="h-4 w-4" />
             </button>
           </div>
         </div>
 
+        <div className="mt-6 flex gap-2">
+          {(["materias", "definicoes"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`rounded-full border px-4 py-2 text-xs uppercase tracking-wider transition ${
+                tab === t ? "border-primary text-primary" : "border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t === "materias" ? "Matérias" : "Definições"}
+            </button>
+          ))}
+        </div>
+
+        {tab === "definicoes" ? (
+          <div className="mt-8">
+            <SiteSettingsPanel />
+          </div>
+        ) : (
+        <>
         {/* STATS */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <StatCard icon={FileText} label="Total" value={statsQ.data?.total ?? 0} />
