@@ -292,7 +292,7 @@ function EditorModal({
           <div className="grid grid-cols-2 gap-4">
             <Field label="Categoria">
               <select value={form.category} onChange={(e) => set("category", e.target.value)} className={inputClass}>
-                {["Música","Cultura","Entrevistas","Notícias","Eventos","Celebridades","Sociedade"].map(c=>(<option key={c}>{c}</option>))}
+                {settings.categories.map((c)=>(<option key={c.slug}>{c.label}</option>))}
               </select>
             </Field>
             <Field label="Estado">
