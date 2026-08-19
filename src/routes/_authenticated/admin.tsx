@@ -39,6 +39,7 @@ function AdminPage() {
   const saveFn = useServerFn(upsertArticle);
   const removeFn = useServerFn(deleteArticle);
   const [editing, setEditing] = useState<Partial<Article> | null>(null);
+  const [tab, setTab] = useState<"materias" | "definicoes">("materias");
 
   const rolesQ = useQuery({ queryKey: ["my-roles"], queryFn: () => fetchRoles() });
   const isStaff = rolesQ.data?.roles?.some((r) => r === "jornalista" || r === "admin" || r === "super_admin" || r === "editor");
