@@ -204,6 +204,8 @@ function AdminPage() {
             </ul>
           )}
         </div>
+        </>
+        )}
       </main>
 
       {editing && <EditorModal initial={editing} onClose={() => setEditing(null)} onSave={(d) => save.mutate(d)} saving={save.isPending} />}
