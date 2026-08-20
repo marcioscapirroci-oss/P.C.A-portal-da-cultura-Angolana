@@ -92,6 +92,12 @@ export function SiteSettingsPanel() {
     setForm((f) => ({ ...f, [k]: v }));
   }
 
+  const home = form.home;
+  function setHome<K extends keyof HomeSettings>(k: K, v: HomeSettings[K]) {
+    setForm((f) => ({ ...f, home: { ...f.home, [k]: v } }));
+  }
+
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
     update.mutate(form, {
