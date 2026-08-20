@@ -41,6 +41,9 @@ type FeedArticle = StaticArticle;
 
 function Home() {
   const { data } = useSuspenseQuery(publishedQuery);
+  const { settings } = useSiteSettings();
+  const home = settings.home;
+
   const published: FeedArticle[] = (data.articles ?? []).map((a) => ({
     slug: a.slug,
     title: a.title,
@@ -51,13 +54,21 @@ function Home() {
     date: a.published_at ? new Date(a.published_at).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" }) : "",
     readTime: "5 min",
   }));
-  // Published articles take priority; fall back to seeded demo content
-  const merged: FeedArticle[] = [...published, ...ARTICLES.filter((s) => !published.some((p) => p.slug === s.slug))];
-  const featured = published[0] ?? ARTICLES.find((a) => a.featured)!;
-  if (!("image" in featured)) (featured as any).image = JOURNALIST.photos.group;
-  const featuredSlug = featured.slug;
-  const latest = merged.filter((a) => a.slug !== featuredSlug).slice(0, 4);
+  const demo = home.show_demo_articles ? ARTICLES.filter((s) => !published.some((p) => p.slug === s.slug)) : [];
+  const merged: FeedArticle[] = [...published, ...demo];
+  const featured: FeedArticle | undefined = published[0] ?? demo.find((a) => a.featured) ?? demo[0];
+  const latest = merged.filter((a) => a.slug !== featured?.slug).slice(0, 4);
   const interviews = merged.filter((a) => a.category === "Entrevistas");
+
+  const artists = home.artists.length ? home.artists : home.show_demo_articles ? ARTISTS : [];
+  const videos = home.videos.length ? home.videos : home.show_demo_articles ? VIDEOS : [];
+  const events = home.events.length ? home.events : home.show_demo_articles ? EVENTS : [];
+
+  const heroImage = home.hero_image || hero1280.url;
+  const heroKicker = home.hero_kicker || (featured ? `${featured.category} · Em destaque` : "");
+  const heroTitle = home.hero_title || featured?.title || settings.full_name;
+  const heroText = home.hero_subtitle || featured?.excerpt || settings.description;
+  const heroCtaLabel = home.hero_cta_label || "Ler matéria";
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,50 +78,57 @@ function Home() {
       <section className="relative">
         <div className="relative h-[78vh] min-h-[560px] w-full overflow-hidden">
           <img
-            src={hero1280.url}
-            srcSet={heroSrcSet}
-            sizes="100vw"
-            alt="Analtino Santos com figura da cultura angolana"
+            src={heroImage}
+            {...(home.hero_image ? {} : { srcSet: heroSrcSet, sizes: "100vw" })}
+            alt={heroTitle}
             loading="eager"
             fetchPriority="high"
             decoding="async"
-            width={1280}
-            height={854}
             className="absolute inset-0 h-full w-full object-cover object-center motion-safe:animate-[heroZoom_18s_ease-out_forwards]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/55 to-background/90" />
           <div className="absolute inset-0 bg-black/30" />
           <div className="absolute inset-x-0 bottom-0">
             <div className="mx-auto max-w-7xl container-px pb-12 md:pb-20">
-              <Link
-                to="/categoria/$slug"
-                params={{ slug: featured.category.toLowerCase() }}
-                className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/40 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-primary backdrop-blur"
-              >
-                <Sparkles className="h-3 w-3" /> {featured.category} · Em destaque
-              </Link>
+              {heroKicker && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/40 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-primary backdrop-blur">
+                  <Sparkles className="h-3 w-3" /> {heroKicker}
+                </span>
+              )}
               <h1 className="mt-5 max-w-4xl font-display text-3xl leading-[1.05] sm:text-5xl md:text-6xl">
-                {featured.title}
+                {heroTitle}
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                {featured.excerpt}
+                {heroText}
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-4">
-                <Link
-                  to="/artigo/$slug"
-                  params={{ slug: featured.slug }}
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant transition hover:opacity-90"
-                >
-                  Ler matéria <ArrowRight className="h-4 w-4" />
-                </Link>
-                <span className="text-xs text-muted-foreground">
-                  Por {featured.author} · {featured.date} · {featured.readTime} de leitura
-                </span>
+                {home.hero_cta_to ? (
+                  <a
+                    href={home.hero_cta_to}
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant transition hover:opacity-90"
+                  >
+                    {heroCtaLabel} <ArrowRight className="h-4 w-4" />
+                  </a>
+                ) : featured ? (
+                  <Link
+                    to="/artigo/$slug"
+                    params={{ slug: featured.slug }}
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant transition hover:opacity-90"
+                  >
+                    {heroCtaLabel} <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : null}
+                {featured && !home.hero_title && (
+                  <span className="text-xs text-muted-foreground">
+                    Por {featured.author} · {featured.date} · {featured.readTime} de leitura
+                  </span>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
+
 
       {/* LATEST */}
       <section className="mx-auto max-w-7xl container-px py-16 md:py-24">
