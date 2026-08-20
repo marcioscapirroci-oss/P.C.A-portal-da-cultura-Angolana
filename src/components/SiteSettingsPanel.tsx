@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { MediaPicker } from "@/components/MediaPicker";
 import {
   useSiteSettings,
   useUpdateSiteSettings,
+  type HomeSettings,
   type SiteSettings,
 } from "@/lib/site-settings";
 
@@ -19,8 +21,62 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-current" />
+      <span className="text-muted-foreground">{label}</span>
+    </label>
+  );
+}
+
+function ImageField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div>
+      <span className="mb-1 block text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-3">
+        {value ? (
+          <img src={value} alt="" className="h-14 w-20 rounded-lg border border-border object-cover" />
+        ) : (
+          <div className="grid h-14 w-20 place-items-center rounded-lg border border-dashed border-border text-[10px] text-muted-foreground">
+            sem imagem
+          </div>
+        )}
+        <button type="button" onClick={() => setOpen(true)} className="rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary">
+          Escolher / enviar
+        </button>
+        {value && (
+          <button type="button" onClick={() => onChange("")} className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground">
+            Remover
+          </button>
+        )}
+      </div>
+      {open && (
+        <MediaPicker
+          accept="image/*"
+          onClose={() => setOpen(false)}
+          onSelect={(a) => {
+            onChange(a.url);
+            setOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 const slugify = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
 
 export function SiteSettingsPanel() {
   const { settings, isLoading } = useSiteSettings();
