@@ -5,6 +5,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS, type Article as StaticArticle } from "@/lib/content";
 import { listPublishedArticles } from "@/lib/public-articles.functions";
+import { useSiteSettings } from "@/lib/site-settings";
+
 
 import hero640 from "@/assets/hero-analtino-640.webp.asset.json";
 import hero1280 from "@/assets/hero-analtino-1280.webp.asset.json";
