@@ -204,6 +204,117 @@ export function SiteSettingsPanel() {
         </button>
       </section>
 
+      <section className="space-y-6 rounded-2xl border border-border/60 p-5">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">Página inicial — banner</p>
+        <ImageField label="Imagem do banner" value={home.hero_image} onChange={(v) => setHome("hero_image", v)} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Etiqueta (opcional)"><input value={home.hero_kicker} onChange={(e) => setHome("hero_kicker", e.target.value)} className={inputClass} /></Field>
+          <Field label="Título (vazio = matéria em destaque)"><input value={home.hero_title} onChange={(e) => setHome("hero_title", e.target.value)} className={inputClass} /></Field>
+          <div className="sm:col-span-2">
+            <Field label="Texto do banner"><textarea rows={2} value={home.hero_subtitle} onChange={(e) => setHome("hero_subtitle", e.target.value)} className={inputClass} /></Field>
+          </div>
+          <Field label="Texto do botão"><input value={home.hero_cta_label} onChange={(e) => setHome("hero_cta_label", e.target.value)} className={inputClass} placeholder="Ler matéria" /></Field>
+          <Field label="Link do botão (opcional)"><input value={home.hero_cta_to} onChange={(e) => setHome("hero_cta_to", e.target.value)} className={inputClass} placeholder="/galeria" /></Field>
+        </div>
+
+        <p className="text-xs uppercase tracking-wider text-muted-foreground">Secções visíveis</p>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <Toggle label="Conteúdo de demonstração" checked={home.show_demo_articles} onChange={(v) => setHome("show_demo_articles", v)} />
+          <Toggle label="Últimas publicações" checked={home.show_latest} onChange={(v) => setHome("show_latest", v)} />
+          <Toggle label="Entrevistas" checked={home.show_interviews} onChange={(v) => setHome("show_interviews", v)} />
+          <Toggle label="Artistas" checked={home.show_artists} onChange={(v) => setHome("show_artists", v)} />
+          <Toggle label="Vídeos" checked={home.show_videos} onChange={(v) => setHome("show_videos", v)} />
+          <Toggle label="Eventos" checked={home.show_events} onChange={(v) => setHome("show_events", v)} />
+          <Toggle label="Publicidade" checked={home.show_ad} onChange={(v) => setHome("show_ad", v)} />
+          <Toggle label="Bloco do jornalista" checked={home.show_journalist} onChange={(v) => setHome("show_journalist", v)} />
+        </div>
+
+        <div>
+          <p className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Artistas em destaque</p>
+          <div className="space-y-4">
+            {home.artists.map((a, i) => (
+              <div key={i} className="space-y-3 rounded-xl border border-border/60 p-4">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <input value={a.name} placeholder="Nome" onChange={(e) => setHome("artists", home.artists.map((x, j) => (j === i ? { ...x, name: e.target.value, slug: x.slug || slugify(e.target.value) } : x)))} className={inputClass} />
+                  <input value={a.genre} placeholder="Género" onChange={(e) => setHome("artists", home.artists.map((x, j) => (j === i ? { ...x, genre: e.target.value } : x)))} className={inputClass} />
+                  <input value={a.slug} placeholder="url" onChange={(e) => setHome("artists", home.artists.map((x, j) => (j === i ? { ...x, slug: slugify(e.target.value) } : x)))} className={inputClass} />
+                </div>
+                <ImageField label="Fotografia" value={a.image} onChange={(v) => setHome("artists", home.artists.map((x, j) => (j === i ? { ...x, image: v } : x)))} />
+                <button type="button" onClick={() => setHome("artists", home.artists.filter((_, j) => j !== i))} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+                  <Trash2 className="h-3.5 w-3.5" /> Remover artista
+                </button>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={() => setHome("artists", [...home.artists, { name: "", genre: "", slug: "", image: "" }])} className="mt-3 inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+            <Plus className="h-3.5 w-3.5" /> Adicionar artista
+          </button>
+        </div>
+
+        <div>
+          <p className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Vídeos</p>
+          <div className="space-y-4">
+            {home.videos.map((v, i) => (
+              <div key={i} className="space-y-3 rounded-xl border border-border/60 p-4">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <input value={v.title} placeholder="Título" onChange={(e) => setHome("videos", home.videos.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} className={inputClass} />
+                  <input value={v.duration} placeholder="Duração (ex: 08:12)" onChange={(e) => setHome("videos", home.videos.map((x, j) => (j === i ? { ...x, duration: e.target.value } : x)))} className={inputClass} />
+                </div>
+                <ImageField label="Miniatura" value={v.thumb} onChange={(url) => setHome("videos", home.videos.map((x, j) => (j === i ? { ...x, thumb: url } : x)))} />
+                <button type="button" onClick={() => setHome("videos", home.videos.filter((_, j) => j !== i))} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+                  <Trash2 className="h-3.5 w-3.5" /> Remover vídeo
+                </button>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={() => setHome("videos", [...home.videos, { title: "", duration: "", thumb: "" }])} className="mt-3 inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+            <Plus className="h-3.5 w-3.5" /> Adicionar vídeo
+          </button>
+        </div>
+
+        <div>
+          <p className="mb-3 text-xs uppercase tracking-wider text-muted-foreground">Agenda de eventos</p>
+          <div className="space-y-2">
+            {home.events.map((ev, i) => (
+              <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2">
+                <input value={ev.date} placeholder="12 Mar" onChange={(e) => setHome("events", home.events.map((x, j) => (j === i ? { ...x, date: e.target.value } : x)))} className={inputClass} />
+                <input value={ev.title} placeholder="Título" onChange={(e) => setHome("events", home.events.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} className={inputClass} />
+                <input value={ev.city} placeholder="Cidade" onChange={(e) => setHome("events", home.events.map((x, j) => (j === i ? { ...x, city: e.target.value } : x)))} className={inputClass} />
+                <button type="button" onClick={() => setHome("events", home.events.filter((_, j) => j !== i))} className="rounded-xl border border-border px-3">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={() => setHome("events", [...home.events, { date: "", title: "", city: "" }])} className="mt-3 inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+            <Plus className="h-3.5 w-3.5" /> Adicionar evento
+          </button>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <p className="sm:col-span-2 text-xs uppercase tracking-wider text-muted-foreground">Bloco do jornalista</p>
+          <Field label="Nome"><input value={home.journalist_name} onChange={(e) => setHome("journalist_name", e.target.value)} className={inputClass} /></Field>
+          <Field label="Função"><input value={home.journalist_role} onChange={(e) => setHome("journalist_role", e.target.value)} className={inputClass} /></Field>
+          <div className="sm:col-span-2">
+            <Field label="Biografia"><textarea rows={4} value={home.journalist_bio} onChange={(e) => setHome("journalist_bio", e.target.value)} className={inputClass} /></Field>
+          </div>
+          <div className="sm:col-span-2">
+            <ImageField label="Fotografia do jornalista" value={home.journalist_photo} onChange={(v) => setHome("journalist_photo", v)} />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <p className="sm:col-span-2 text-xs uppercase tracking-wider text-muted-foreground">Bloco de publicidade</p>
+          <Field label="Etiqueta"><input value={home.ad_kicker} onChange={(e) => setHome("ad_kicker", e.target.value)} className={inputClass} /></Field>
+          <Field label="Título"><input value={home.ad_title} onChange={(e) => setHome("ad_title", e.target.value)} className={inputClass} /></Field>
+          <div className="sm:col-span-2">
+            <Field label="Texto"><textarea rows={2} value={home.ad_text} onChange={(e) => setHome("ad_text", e.target.value)} className={inputClass} /></Field>
+          </div>
+          <Field label="E-mail de contacto"><input value={home.ad_email} onChange={(e) => setHome("ad_email", e.target.value)} className={inputClass} /></Field>
+        </div>
+      </section>
+
+
       <div className="flex justify-end">
         <button
           type="submit"
