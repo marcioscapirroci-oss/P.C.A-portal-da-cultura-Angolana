@@ -124,7 +124,13 @@ export async function fetchSiteSettings(): Promise<SiteSettings> {
     .eq("key", "site")
     .maybeSingle();
   if (error || !data) return DEFAULT_SETTINGS;
-  return { ...DEFAULT_SETTINGS, ...((data.value ?? {}) as Partial<SiteSettings>) };
+  const raw = (data.value ?? {}) as Partial<SiteSettings>;
+  return {
+    ...DEFAULT_SETTINGS,
+    ...raw,
+    home: { ...DEFAULT_HOME, ...((raw.home ?? {}) as Partial<HomeSettings>) },
+  };
+
 }
 
 export function useSiteSettings() {

@@ -5,6 +5,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS, type Article as StaticArticle } from "@/lib/content";
 import { listPublishedArticles } from "@/lib/public-articles.functions";
+import { useSiteSettings } from "@/lib/site-settings";
+
 
 import hero640 from "@/assets/hero-analtino-640.webp.asset.json";
 import hero1280 from "@/assets/hero-analtino-1280.webp.asset.json";
@@ -41,6 +43,9 @@ type FeedArticle = StaticArticle;
 
 function Home() {
   const { data } = useSuspenseQuery(publishedQuery);
+  const { settings } = useSiteSettings();
+  const home = settings.home;
+
   const published: FeedArticle[] = (data.articles ?? []).map((a) => ({
     slug: a.slug,
     title: a.title,
@@ -51,13 +56,21 @@ function Home() {
     date: a.published_at ? new Date(a.published_at).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" }) : "",
     readTime: "5 min",
   }));
-  // Published articles take priority; fall back to seeded demo content
-  const merged: FeedArticle[] = [...published, ...ARTICLES.filter((s) => !published.some((p) => p.slug === s.slug))];
-  const featured = published[0] ?? ARTICLES.find((a) => a.featured)!;
-  if (!("image" in featured)) (featured as any).image = JOURNALIST.photos.group;
-  const featuredSlug = featured.slug;
-  const latest = merged.filter((a) => a.slug !== featuredSlug).slice(0, 4);
+  const demo = home.show_demo_articles ? ARTICLES.filter((s) => !published.some((p) => p.slug === s.slug)) : [];
+  const merged: FeedArticle[] = [...published, ...demo];
+  const featured: FeedArticle | undefined = published[0] ?? demo.find((a) => a.featured) ?? demo[0];
+  const latest = merged.filter((a) => a.slug !== featured?.slug).slice(0, 4);
   const interviews = merged.filter((a) => a.category === "Entrevistas");
+
+  const artists = home.artists.length ? home.artists : home.show_demo_articles ? ARTISTS : [];
+  const videos = home.videos.length ? home.videos : home.show_demo_articles ? VIDEOS : [];
+  const events = home.events.length ? home.events : home.show_demo_articles ? EVENTS : [];
+
+  const heroImage = home.hero_image || hero1280.url;
+  const heroKicker = home.hero_kicker || (featured ? `${featured.category} · Em destaque` : "");
+  const heroTitle = home.hero_title || featured?.title || settings.full_name;
+  const heroText = home.hero_subtitle || featured?.excerpt || settings.description;
+  const heroCtaLabel = home.hero_cta_label || "Ler matéria";
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,196 +80,219 @@ function Home() {
       <section className="relative">
         <div className="relative h-[78vh] min-h-[560px] w-full overflow-hidden">
           <img
-            src={hero1280.url}
-            srcSet={heroSrcSet}
-            sizes="100vw"
-            alt="Analtino Santos com figura da cultura angolana"
+            src={heroImage}
+            {...(home.hero_image ? {} : { srcSet: heroSrcSet, sizes: "100vw" })}
+            alt={heroTitle}
             loading="eager"
             fetchPriority="high"
             decoding="async"
-            width={1280}
-            height={854}
             className="absolute inset-0 h-full w-full object-cover object-center motion-safe:animate-[heroZoom_18s_ease-out_forwards]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/55 to-background/90" />
           <div className="absolute inset-0 bg-black/30" />
           <div className="absolute inset-x-0 bottom-0">
             <div className="mx-auto max-w-7xl container-px pb-12 md:pb-20">
-              <Link
-                to="/categoria/$slug"
-                params={{ slug: featured.category.toLowerCase() }}
-                className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/40 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-primary backdrop-blur"
-              >
-                <Sparkles className="h-3 w-3" /> {featured.category} · Em destaque
-              </Link>
+              {heroKicker && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/40 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-primary backdrop-blur">
+                  <Sparkles className="h-3 w-3" /> {heroKicker}
+                </span>
+              )}
               <h1 className="mt-5 max-w-4xl font-display text-3xl leading-[1.05] sm:text-5xl md:text-6xl">
-                {featured.title}
+                {heroTitle}
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
-                {featured.excerpt}
+                {heroText}
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-4">
-                <Link
-                  to="/artigo/$slug"
-                  params={{ slug: featured.slug }}
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant transition hover:opacity-90"
-                >
-                  Ler matéria <ArrowRight className="h-4 w-4" />
-                </Link>
-                <span className="text-xs text-muted-foreground">
-                  Por {featured.author} · {featured.date} · {featured.readTime} de leitura
-                </span>
+                {home.hero_cta_to ? (
+                  <a
+                    href={home.hero_cta_to}
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant transition hover:opacity-90"
+                  >
+                    {heroCtaLabel} <ArrowRight className="h-4 w-4" />
+                  </a>
+                ) : featured ? (
+                  <Link
+                    to="/artigo/$slug"
+                    params={{ slug: featured.slug }}
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant transition hover:opacity-90"
+                  >
+                    {heroCtaLabel} <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : null}
+                {featured && !home.hero_title && (
+                  <span className="text-xs text-muted-foreground">
+                    Por {featured.author} · {featured.date} · {featured.readTime} de leitura
+                  </span>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
+
 
       {/* LATEST */}
-      <section className="mx-auto max-w-7xl container-px py-16 md:py-24">
-        <SectionHeading eyebrow="Últimas publicações" title="O que está a definir a agenda cultural" link="/categoria/noticias" linkLabel="Ver todas" />
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {latest.map((a) => (
-            <ArticleCard key={a.slug} article={a} />
-          ))}
-        </div>
-      </section>
+      {home.show_latest && latest.length > 0 && (
+        <section className="mx-auto max-w-7xl container-px py-16 md:py-24">
+          <SectionHeading eyebrow="Últimas publicações" title="O que está a definir a agenda cultural" link="/categoria/noticias" linkLabel="Ver todas" />
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {latest.map((a) => (
+              <ArticleCard key={a.slug} article={a} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* INTERVIEWS */}
-      <section className="border-y border-border/60 bg-card/30">
-        <div className="mx-auto max-w-7xl container-px py-16 md:py-24">
-          <SectionHeading eyebrow="Entrevistas exclusivas" title="Conversas que ficam para a história" link="/categoria/entrevistas" linkLabel="Todas as entrevistas" />
-          <div className="mt-10 grid gap-8 lg:grid-cols-2">
-            {interviews.concat(interviews).slice(0, 2).map((a, i) => (
-              <Link
-                key={i}
-                to="/artigo/$slug"
-                params={{ slug: a.slug }}
-                className="group grid gap-6 rounded-3xl border border-border/60 bg-card p-4 shadow-card transition hover:border-primary/40 sm:grid-cols-[1fr_1.2fr] sm:p-6"
-              >
-                <div className="aspect-[4/5] overflow-hidden rounded-2xl">
-                  <img src={a.image} alt={a.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-                </div>
-                <div className="flex flex-col justify-center">
-                  <span className="text-[11px] uppercase tracking-[0.25em] text-primary">{a.category}</span>
-                  <h3 className="mt-3 font-display text-2xl leading-tight md:text-3xl">{a.title}</h3>
-                  <p className="mt-3 text-sm text-muted-foreground">{a.excerpt}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 text-sm text-primary">
-                    Ler entrevista <ArrowRight className="h-4 w-4" />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ARTISTS */}
-      <section className="mx-auto max-w-7xl container-px py-16 md:py-24">
-        <SectionHeading eyebrow="Artistas em destaque" title="As vozes que fazem Angola" link="/categoria/musica" linkLabel="Explorar música" />
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {ARTISTS.map((artist) => (
-            <Link
-              key={artist.slug}
-              to="/artista/$slug"
-              params={{ slug: artist.slug }}
-              className="group relative overflow-hidden rounded-3xl border border-border/60"
-            >
-              <div className="aspect-[3/4] overflow-hidden">
-                <img src={artist.image} alt={artist.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5">
-                <p className="text-[11px] uppercase tracking-[0.25em] text-primary">{artist.genre}</p>
-                <h3 className="mt-1 font-display text-xl">{artist.name}</h3>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* VIDEOS */}
-      <section className="border-y border-border/60 bg-card/30">
-        <div className="mx-auto max-w-7xl container-px py-16 md:py-24">
-          <SectionHeading eyebrow="Vídeos recentes" title="Reportagens em movimento" link="/categoria/noticias" linkLabel="Ver canal" />
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {VIDEOS.map((v) => (
-              <div key={v.id} className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border/60">
-                <div className="aspect-video overflow-hidden">
-                  <img src={v.thumb} alt={v.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-                </div>
-                <div className="absolute inset-0 grid place-items-center bg-background/30 opacity-0 transition group-hover:opacity-100">
-                  <span className="grid h-16 w-16 place-items-center rounded-full bg-gradient-gold text-primary-foreground shadow-elegant">
-                    <Play className="h-6 w-6" fill="currentColor" />
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 p-4">
-                  <p className="text-sm font-medium leading-tight">{v.title}</p>
-                  <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">{v.duration}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* EVENTS + AD */}
-      <section className="mx-auto max-w-7xl container-px py-16 md:py-24">
-        <div className="grid gap-10 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <SectionHeading eyebrow="Cobertura de eventos" title="Agenda cultural de Angola" />
-            <ul className="mt-8 divide-y divide-border/60 rounded-2xl border border-border/60 bg-card/30">
-              {EVENTS.map((e, i) => (
-                <li key={i} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-5 py-5 sm:px-7">
-                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-gold text-center text-primary-foreground">
-                    <span className="font-display text-xs leading-none">{e.date.split(" ")[0]}</span>
-                    <span className="text-[10px] uppercase">{e.date.split(" ")[1]}</span>
+      {home.show_interviews && interviews.length > 0 && (
+        <section className="border-y border-border/60 bg-card/30">
+          <div className="mx-auto max-w-7xl container-px py-16 md:py-24">
+            <SectionHeading eyebrow="Entrevistas exclusivas" title="Conversas que ficam para a história" link="/categoria/entrevistas" linkLabel="Todas as entrevistas" />
+            <div className="mt-10 grid gap-8 lg:grid-cols-2">
+              {interviews.slice(0, 2).map((a, i) => (
+                <Link
+                  key={i}
+                  to="/artigo/$slug"
+                  params={{ slug: a.slug }}
+                  className="group grid gap-6 rounded-3xl border border-border/60 bg-card p-4 shadow-card transition hover:border-primary/40 sm:grid-cols-[1fr_1.2fr] sm:p-6"
+                >
+                  <div className="aspect-[4/5] overflow-hidden rounded-2xl">
+                    <img src={a.image} alt={a.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{e.title}</p>
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {e.city}</p>
+                  <div className="flex flex-col justify-center">
+                    <span className="text-[11px] uppercase tracking-[0.25em] text-primary">{a.category}</span>
+                    <h3 className="mt-3 font-display text-2xl leading-tight md:text-3xl">{a.title}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground">{a.excerpt}</p>
+                    <span className="mt-5 inline-flex items-center gap-2 text-sm text-primary">
+                      Ler entrevista <ArrowRight className="h-4 w-4" />
+                    </span>
                   </div>
-                  <button className="hidden shrink-0 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground sm:inline">Detalhes</button>
-                </li>
+                </Link>
               ))}
-            </ul>
-          </div>
-
-          <aside className="rounded-3xl border border-primary/30 bg-gradient-to-br from-card to-background p-8 shadow-card">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary">Parcerias & publicidade</p>
-            <h3 className="mt-3 font-display text-2xl">Anuncie no portal de referência da cultura angolana</h3>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Espaços premium para marcas que querem comunicar com o público cultural mais qualificado de Angola.
-            </p>
-            <a href="mailto:contacto@analtinosantos.ao" className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-medium text-primary-foreground">
-              Falar com a equipa <ArrowRight className="h-4 w-4" />
-            </a>
-          </aside>
-        </div>
-      </section>
-
-      {/* JOURNALIST STRIP */}
-      <section className="border-t border-border/60 bg-card/30">
-        <div className="mx-auto grid max-w-7xl gap-10 container-px py-16 md:grid-cols-[1.1fr_1.4fr] md:py-24">
-          <div className="overflow-hidden rounded-3xl shadow-elegant">
-            <img src={JOURNALIST.photos.award} alt={JOURNALIST.name} className="h-full w-full object-cover" />
-          </div>
-          <div className="flex flex-col justify-center">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary">Sobre o jornalista</p>
-            <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">{JOURNALIST.name}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{JOURNALIST.role}</p>
-            <p className="mt-6 text-base leading-relaxed text-muted-foreground">{JOURNALIST.bio}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/sobre" className="rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant">
-                Conhecer o percurso
-              </Link>
-              <button className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm">
-                <Share2 className="h-4 w-4" /> Partilhar perfil
-              </button>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* ARTISTS */}
+      {home.show_artists && artists.length > 0 && (
+        <section className="mx-auto max-w-7xl container-px py-16 md:py-24">
+          <SectionHeading eyebrow="Artistas em destaque" title="As vozes que fazem Angola" link="/categoria/musica" linkLabel="Explorar música" />
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {artists.map((artist, i) => (
+              <Link
+                key={artist.slug || i}
+                to="/artista/$slug"
+                params={{ slug: artist.slug }}
+                className="group relative overflow-hidden rounded-3xl border border-border/60"
+              >
+                <div className="aspect-[3/4] overflow-hidden">
+                  <img src={artist.image} alt={artist.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-110" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <p className="text-[11px] uppercase tracking-[0.25em] text-primary">{artist.genre}</p>
+                  <h3 className="mt-1 font-display text-xl">{artist.name}</h3>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* VIDEOS */}
+      {home.show_videos && videos.length > 0 && (
+        <section className="border-y border-border/60 bg-card/30">
+          <div className="mx-auto max-w-7xl container-px py-16 md:py-24">
+            <SectionHeading eyebrow="Vídeos recentes" title="Reportagens em movimento" link="/categoria/noticias" linkLabel="Ver canal" />
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {videos.map((v, i) => (
+                <div key={i} className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border/60">
+                  <div className="aspect-video overflow-hidden">
+                    <img src={v.thumb} alt={v.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                  </div>
+                  <div className="absolute inset-0 grid place-items-center bg-background/30 opacity-0 transition group-hover:opacity-100">
+                    <span className="grid h-16 w-16 place-items-center rounded-full bg-gradient-gold text-primary-foreground shadow-elegant">
+                      <Play className="h-6 w-6" fill="currentColor" />
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 p-4">
+                    <p className="text-sm font-medium leading-tight">{v.title}</p>
+                    <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] text-muted-foreground">{v.duration}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* EVENTS + AD */}
+      {(home.show_events && events.length > 0) || home.show_ad ? (
+        <section className="mx-auto max-w-7xl container-px py-16 md:py-24">
+          <div className="grid gap-10 lg:grid-cols-3">
+            {home.show_events && events.length > 0 && (
+              <div className="lg:col-span-2">
+                <SectionHeading eyebrow="Cobertura de eventos" title="Agenda cultural de Angola" />
+                <ul className="mt-8 divide-y divide-border/60 rounded-2xl border border-border/60 bg-card/30">
+                  {events.map((e, i) => (
+                    <li key={i} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 px-5 py-5 sm:px-7">
+                      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-gradient-gold text-center text-primary-foreground">
+                        <span className="font-display text-xs leading-none">{e.date.split(" ")[0]}</span>
+                        <span className="text-[10px] uppercase">{e.date.split(" ")[1]}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{e.title}</p>
+                        <p className="flex items-center gap-1 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {e.city}</p>
+                      </div>
+                      <button className="hidden shrink-0 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground sm:inline">Detalhes</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {home.show_ad && (
+              <aside className="rounded-3xl border border-primary/30 bg-gradient-to-br from-card to-background p-8 shadow-card">
+                <p className="text-[11px] uppercase tracking-[0.3em] text-primary">{home.ad_kicker}</p>
+                <h3 className="mt-3 font-display text-2xl">{home.ad_title}</h3>
+                <p className="mt-3 text-sm text-muted-foreground">{home.ad_text}</p>
+                <a href={`mailto:${home.ad_email || settings.contact_email}`} className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-gold px-5 py-2.5 text-sm font-medium text-primary-foreground">
+                  Falar com a equipa <ArrowRight className="h-4 w-4" />
+                </a>
+              </aside>
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {/* JOURNALIST STRIP */}
+      {home.show_journalist && (
+        <section className="border-t border-border/60 bg-card/30">
+          <div className="mx-auto grid max-w-7xl gap-10 container-px py-16 md:grid-cols-[1.1fr_1.4fr] md:py-24">
+            <div className="overflow-hidden rounded-3xl shadow-elegant">
+              <img src={home.journalist_photo || JOURNALIST.photos.award} alt={home.journalist_name || JOURNALIST.name} className="h-full w-full object-cover" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <p className="text-[11px] uppercase tracking-[0.3em] text-primary">Sobre o jornalista</p>
+              <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">{home.journalist_name || JOURNALIST.name}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{home.journalist_role || JOURNALIST.role}</p>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">{home.journalist_bio || JOURNALIST.bio}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link to="/sobre" className="rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant">
+                  Conhecer o percurso
+                </Link>
+                <button className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm">
+                  <Share2 className="h-4 w-4" /> Partilhar perfil
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+
 
       <SiteFooter />
     </div>
