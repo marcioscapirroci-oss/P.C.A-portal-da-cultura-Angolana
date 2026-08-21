@@ -54,6 +54,7 @@ export type HomeSettings = {
   artists: ArtistItem[];
   videos: VideoItem[];
   events: EventItem[];
+  demo_articles: ArticleItem[];
   journalist_name: string;
   journalist_role: string;
   journalist_bio: string;
