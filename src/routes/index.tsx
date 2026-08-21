@@ -51,20 +51,24 @@ function Home() {
     title: a.title,
     excerpt: a.excerpt ?? "",
     category: a.category,
-    image: a.cover_image ?? JOURNALIST.photos.group,
+    image: a.cover_image ?? home.hero_image,
     author: "Analtino Santos",
     date: a.published_at ? new Date(a.published_at).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" }) : "",
     readTime: "5 min",
   }));
-  const demo = home.show_demo_articles ? ARTICLES.filter((s) => !published.some((p) => p.slug === s.slug)) : [];
+  const demo: FeedArticle[] = home.show_demo_articles
+    ? home.demo_articles
+        .filter((s) => !published.some((p) => p.slug === s.slug))
+        .map((s) => ({ ...s, featured: false }))
+    : [];
   const merged: FeedArticle[] = [...published, ...demo];
-  const featured: FeedArticle | undefined = published[0] ?? demo.find((a) => a.featured) ?? demo[0];
+  const featured: FeedArticle | undefined = published[0] ?? demo[0];
   const latest = merged.filter((a) => a.slug !== featured?.slug).slice(0, 4);
   const interviews = merged.filter((a) => a.category === "Entrevistas");
 
-  const artists = home.artists.length ? home.artists : home.show_demo_articles ? ARTISTS : [];
-  const videos = home.videos.length ? home.videos : home.show_demo_articles ? VIDEOS : [];
-  const events = home.events.length ? home.events : home.show_demo_articles ? EVENTS : [];
+  const artists = home.artists;
+  const videos = home.videos;
+  const events = home.events;
 
   const heroImage = home.hero_image || hero1280.url;
   const heroKicker = home.hero_kicker || (featured ? `${featured.category} · Em destaque` : "");
