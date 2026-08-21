@@ -1,26 +1,23 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Facebook, Instagram, Youtube } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ARTICLES, ARTISTS, VIDEOS } from "@/lib/content";
+import { useSiteSettings } from "@/lib/site-settings";
 
 export const Route = createFileRoute("/artista/$slug")({
-  loader: ({ params }) => {
-    const artist = ARTISTS.find((a) => a.slug === params.slug);
-    if (!artist) throw notFound();
-    return { artist };
+  head: ({ params }) => {
+    const name = decodeURIComponent(params.slug).replace(/-/g, " ");
+    return {
+      meta: [
+        { title: `${name} — PCArt — Plataforma da Cultura Angolana` },
+        { name: "description", content: `Perfil, notícias e vídeos de ${name} no portal PCArt.` },
+        { property: "og:title", content: name },
+        { property: "og:description", content: `Perfil, notícias e vídeos de ${name}.` },
+        { property: "og:type", content: "profile" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.artist.name} — PCArt — Plataforma da Cultura Angolana` },
-          { name: "description", content: loaderData.artist.bio },
-          { property: "og:title", content: loaderData.artist.name },
-          { property: "og:description", content: loaderData.artist.bio },
-          { property: "og:image", content: loaderData.artist.image },
-        ]
-      : [],
-  }),
   notFoundComponent: () => (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -35,8 +32,24 @@ export const Route = createFileRoute("/artista/$slug")({
 });
 
 function ArtistPage() {
-  const { artist } = Route.useLoaderData();
-  const related = ARTICLES.slice(0, 3);
+  const { slug } = Route.useParams();
+  const { settings } = useSiteSettings();
+  const artist = settings.home.artists.find((a) => a.slug === slug);
+  const related = settings.home.demo_articles.slice(0, 3);
+  const videos = settings.home.videos;
+
+  if (!artist) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <div className="mx-auto max-w-3xl px-6 py-32 text-center">
+          <h1 className="font-display text-4xl">Artista não encontrado</h1>
+          <Link to="/" className="mt-6 inline-block text-primary">Voltar ao início</Link>
+        </div>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,8 +98,8 @@ function ArtistPage() {
         <div className="mx-auto max-w-7xl container-px py-16">
           <h2 className="font-display text-3xl">Vídeos</h2>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {VIDEOS.map((v) => (
-              <div key={v.id} className="overflow-hidden rounded-2xl border border-border/60">
+            {videos.map((v, vi) => (
+              <div key={vi} className="overflow-hidden rounded-2xl border border-border/60">
                 <div className="aspect-video overflow-hidden">
                   <img src={v.thumb} alt={v.title} className="h-full w-full object-cover" />
                 </div>
