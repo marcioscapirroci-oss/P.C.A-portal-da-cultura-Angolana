@@ -190,6 +190,7 @@ export async function fetchSiteSettings(): Promise<SiteSettings> {
     ...DEFAULT_SETTINGS,
     ...raw,
     home: { ...DEFAULT_HOME, ...((raw.home ?? {}) as Partial<HomeSettings>) },
+    about: { ...DEFAULT_ABOUT, ...((raw.about ?? {}) as Partial<AboutSettings>) },
   };
 
 }
