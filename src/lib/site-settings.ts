@@ -5,7 +5,7 @@ import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS } from "@/lib/content";
 export type NavItem = { label: string; to: string };
 export type CategoryItem = { label: string; slug: string };
 
-export type ArtistItem = { name: string; genre: string; slug: string; image: string };
+export type ArtistItem = { name: string; genre: string; slug: string; image: string; bio?: string };
 export type VideoItem = { title: string; duration: string; thumb: string };
 export type EventItem = { date: string; title: string; city: string };
 export type ArticleItem = {
@@ -117,7 +117,7 @@ export const DEFAULT_HOME: HomeSettings = {
   show_events: true,
   show_ad: true,
   show_journalist: true,
-  artists: ARTISTS.map((a) => ({ name: a.name, genre: a.genre, slug: a.slug, image: a.image })),
+  artists: ARTISTS.map((a) => ({ name: a.name, genre: a.genre, slug: a.slug, image: a.image, bio: a.bio })),
   videos: VIDEOS.map((v) => ({ title: v.title, duration: v.duration, thumb: v.thumb })),
   events: EVENTS.map((e) => ({ date: e.date, title: e.title, city: e.city })),
   demo_articles: ARTICLES.map((a) => ({

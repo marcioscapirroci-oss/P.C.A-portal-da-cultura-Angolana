@@ -66,7 +66,7 @@ function ArtistPage() {
           </Link>
           <p className="mt-6 text-[11px] uppercase tracking-[0.3em] text-primary">{artist.genre}</p>
           <h1 className="mt-3 font-display text-5xl leading-[1.05] md:text-7xl">{artist.name}</h1>
-          <p className="mt-6 max-w-2xl text-base text-muted-foreground">{artist.bio}</p>
+          <p className="mt-6 max-w-2xl text-base text-muted-foreground">{artist.bio ?? ""}</p>
           <div className="mt-6 flex gap-3">
             {[Facebook, Instagram, Youtube].map((Icon, i) => (
               <a key={i} href="#" className="grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary">
