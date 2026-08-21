@@ -80,6 +80,26 @@ export type SiteSettings = {
   nav: NavItem[];
   categories: CategoryItem[];
   home: HomeSettings;
+  about: AboutSettings;
+};
+
+export const DEFAULT_ABOUT: AboutSettings = {
+  kicker: "Perfil",
+  name: JOURNALIST.name,
+  role: JOURNALIST.role,
+  bio: JOURNALIST.bio,
+  portrait: JOURNALIST.photos.portrait,
+  stats: [
+    { value: "1.2k+", label: "Matérias" },
+    { value: "300+", label: "Entrevistas" },
+    { value: "12", label: "Distinções" },
+  ],
+  gallery_kicker: "Galeria",
+  gallery_title: "Momentos de uma carreira",
+  gallery: [JOURNALIST.photos.group, JOURNALIST.photos.interview, JOURNALIST.photos.award],
+  contact_title: "Quer propor uma entrevista ou cobertura?",
+  contact_text: "Envie a sua proposta e a equipa entrará em contacto.",
+  contact_email: "contacto@analtinosantos.ao",
 };
 
 export const DEFAULT_HOME: HomeSettings = {
