@@ -172,6 +172,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     { label: "Sociedade", slug: "sociedade" },
   ],
   home: DEFAULT_HOME,
+  about: DEFAULT_ABOUT,
 };
 
 
