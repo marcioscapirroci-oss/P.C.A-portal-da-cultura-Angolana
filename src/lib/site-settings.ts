@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS } from "@/lib/content";
 
 export type NavItem = { label: string; to: string };
 export type CategoryItem = { label: string; slug: string };
@@ -7,6 +8,33 @@ export type CategoryItem = { label: string; slug: string };
 export type ArtistItem = { name: string; genre: string; slug: string; image: string };
 export type VideoItem = { title: string; duration: string; thumb: string };
 export type EventItem = { date: string; title: string; city: string };
+export type ArticleItem = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  image: string;
+  author: string;
+  date: string;
+  readTime: string;
+  content?: string;
+};
+export type StatItem = { value: string; label: string };
+
+export type AboutSettings = {
+  kicker: string;
+  name: string;
+  role: string;
+  bio: string;
+  portrait: string;
+  stats: StatItem[];
+  gallery_kicker: string;
+  gallery_title: string;
+  gallery: string[];
+  contact_title: string;
+  contact_text: string;
+  contact_email: string;
+};
 
 export type HomeSettings = {
   hero_image: string;
