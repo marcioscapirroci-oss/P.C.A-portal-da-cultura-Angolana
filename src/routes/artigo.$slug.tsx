@@ -1,9 +1,9 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { ArticleEngagement } from "@/components/ArticleEngagement";
-import { ARTICLES, JOURNALIST } from "@/lib/content";
+import { useSiteSettings } from "@/lib/site-settings";
 import { getPublishedArticle } from "@/lib/public-articles.functions";
 
 export const Route = createFileRoute("/artigo/$slug")({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/artigo/$slug")({
           title: dbArticle.title,
           excerpt: dbArticle.excerpt ?? "",
           category: dbArticle.category,
-          image: dbArticle.cover_image ?? JOURNALIST.photos.group,
+          image: dbArticle.cover_image ?? "",
           author: "Analtino Santos",
           date: dbArticle.published_at
             ? new Date(dbArticle.published_at).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" })
@@ -27,18 +27,16 @@ export const Route = createFileRoute("/artigo/$slug")({
         },
       };
     }
-    const fallback = ARTICLES.find((a) => a.slug === params.slug);
-    if (!fallback) throw notFound();
-    return { article: { id: "", ...fallback, content: "" } };
+    return { article: null };
   },
   head: ({ loaderData }) => ({
-    meta: loaderData
+    meta: loaderData?.article
       ? [
-          { title: `${loaderData.article.title} — PCArt — Plataforma da Cultura Angolana` },
-          { name: "description", content: loaderData.article.excerpt },
-          { property: "og:title", content: loaderData.article.title },
-          { property: "og:description", content: loaderData.article.excerpt },
-          { property: "og:image", content: loaderData.article.image },
+          { title: `${loaderData.article!.title} — PCArt — Plataforma da Cultura Angolana` },
+          { name: "description", content: loaderData.article!.excerpt },
+          { property: "og:title", content: loaderData.article!.title },
+          { property: "og:description", content: loaderData.article!.excerpt },
+          { property: "og:image", content: loaderData.article!.image },
           { property: "og:type", content: "article" },
         ]
       : [],
@@ -88,7 +86,24 @@ function renderContent(raw: string): string {
 }
 
 function ArticlePage() {
-  const { article } = Route.useLoaderData();
+  const { article: dbArticle } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const { settings } = useSiteSettings();
+  const fallback = settings.home.demo_articles.find((a) => a.slug === slug);
+  const article = dbArticle ?? (fallback ? { id: "", ...fallback, content: fallback.content ?? "" } : null);
+
+  if (!article) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <div className="mx-auto max-w-3xl px-6 py-32 text-center">
+          <h1 className="font-display text-4xl">Matéria não encontrada</h1>
+          <Link to="/" className="mt-6 inline-block text-primary">Voltar ao início</Link>
+        </div>
+        <SiteFooter />
+      </div>
+    );
+  }
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const wa = `https://wa.me/?text=${encodeURIComponent(article.title + " — " + shareUrl)}`;
   const html = article.content ? renderContent(article.content) : "";

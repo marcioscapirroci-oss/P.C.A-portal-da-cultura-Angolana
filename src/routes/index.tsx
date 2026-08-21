@@ -3,7 +3,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, CalendarDays, MapPin, Play, Share2, Sparkles } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { ARTICLES, ARTISTS, EVENTS, JOURNALIST, VIDEOS, type Article as StaticArticle } from "@/lib/content";
+import { type Article as StaticArticle } from "@/lib/content";
 import { listPublishedArticles } from "@/lib/public-articles.functions";
 import { useSiteSettings } from "@/lib/site-settings";
 
@@ -51,20 +51,24 @@ function Home() {
     title: a.title,
     excerpt: a.excerpt ?? "",
     category: a.category,
-    image: a.cover_image ?? JOURNALIST.photos.group,
+    image: a.cover_image ?? home.hero_image,
     author: "Analtino Santos",
     date: a.published_at ? new Date(a.published_at).toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" }) : "",
     readTime: "5 min",
   }));
-  const demo = home.show_demo_articles ? ARTICLES.filter((s) => !published.some((p) => p.slug === s.slug)) : [];
+  const demo: FeedArticle[] = home.show_demo_articles
+    ? home.demo_articles
+        .filter((s) => !published.some((p) => p.slug === s.slug))
+        .map((s) => ({ ...s, featured: false }))
+    : [];
   const merged: FeedArticle[] = [...published, ...demo];
-  const featured: FeedArticle | undefined = published[0] ?? demo.find((a) => a.featured) ?? demo[0];
+  const featured: FeedArticle | undefined = published[0] ?? demo[0];
   const latest = merged.filter((a) => a.slug !== featured?.slug).slice(0, 4);
   const interviews = merged.filter((a) => a.category === "Entrevistas");
 
-  const artists = home.artists.length ? home.artists : home.show_demo_articles ? ARTISTS : [];
-  const videos = home.videos.length ? home.videos : home.show_demo_articles ? VIDEOS : [];
-  const events = home.events.length ? home.events : home.show_demo_articles ? EVENTS : [];
+  const artists = home.artists;
+  const videos = home.videos;
+  const events = home.events;
 
   const heroImage = home.hero_image || hero1280.url;
   const heroKicker = home.hero_kicker || (featured ? `${featured.category} · Em destaque` : "");
@@ -272,13 +276,13 @@ function Home() {
         <section className="border-t border-border/60 bg-card/30">
           <div className="mx-auto grid max-w-7xl gap-10 container-px py-16 md:grid-cols-[1.1fr_1.4fr] md:py-24">
             <div className="overflow-hidden rounded-3xl shadow-elegant">
-              <img src={home.journalist_photo || JOURNALIST.photos.award} alt={home.journalist_name || JOURNALIST.name} className="h-full w-full object-cover" />
+              <img src={home.journalist_photo} alt={home.journalist_name} className="h-full w-full object-cover" />
             </div>
             <div className="flex flex-col justify-center">
               <p className="text-[11px] uppercase tracking-[0.3em] text-primary">Sobre o jornalista</p>
-              <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">{home.journalist_name || JOURNALIST.name}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{home.journalist_role || JOURNALIST.role}</p>
-              <p className="mt-6 text-base leading-relaxed text-muted-foreground">{home.journalist_bio || JOURNALIST.bio}</p>
+              <h2 className="mt-3 font-display text-4xl leading-tight md:text-5xl">{home.journalist_name}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{home.journalist_role}</p>
+              <p className="mt-6 text-base leading-relaxed text-muted-foreground">{home.journalist_bio}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/sobre" className="rounded-full bg-gradient-gold px-6 py-3 text-sm font-medium text-primary-foreground shadow-elegant">
                   Conhecer o percurso
