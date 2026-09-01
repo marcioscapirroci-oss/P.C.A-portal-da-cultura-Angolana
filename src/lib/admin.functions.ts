@@ -17,12 +17,28 @@ async function assertStaff(ctx: { supabase: any; userId: string }) {
   return roles;
 }
 
+const blockSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("text"), text: z.string().max(20000) }),
+  z.object({
+    type: z.literal("image"),
+    url: z.string().max(1000),
+    caption: z.string().max(300).optional().default(""),
+  }),
+  z.object({
+    type: z.literal("video"),
+    url: z.string().max(1000),
+    caption: z.string().max(300).optional().default(""),
+  }),
+]);
+
 const articleInput = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().min(3).max(120).regex(/^[a-z0-9-]+$/, "Slug inválido"),
   title: z.string().min(3).max(200),
+  subtitle: z.string().max(300).optional().nullable(),
   excerpt: z.string().max(500).optional().nullable(),
   content: z.string().max(50000).optional().nullable(),
+  blocks: z.array(blockSchema).max(200).optional().default([]),
   category: z.string().min(2).max(60),
   cover_image: z.string().url().max(500).optional().nullable(),
   status: z.enum(["draft", "scheduled", "published"]),
@@ -35,11 +51,12 @@ export const listArticlesAdmin = createServerFn({ method: "GET" })
     await assertStaff(context);
     const { data, error } = await context.supabase
       .from("articles")
-      .select("id, slug, title, category, status, published_at, views, updated_at")
+      .select("id, slug, title, subtitle, excerpt, content, blocks, cover_image, category, status, published_at, views, updated_at")
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
     return { articles: data ?? [] };
   });
+
 
 export const upsertArticle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

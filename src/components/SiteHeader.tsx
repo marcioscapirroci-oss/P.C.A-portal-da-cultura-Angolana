@@ -109,9 +109,14 @@ export function SiteHeader() {
               Entrar
             </Link>
           )}
-          <button className="grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition hover:text-foreground hover:border-primary">
+          <Link
+            to="/pesquisa"
+            aria-label="Pesquisar"
+            className="grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground transition hover:text-foreground hover:border-primary"
+          >
             <Search className="h-4 w-4" />
-          </button>
+          </Link>
+
           <button
             onClick={() => setOpen((v) => !v)}
             className="lg:hidden grid h-10 w-10 place-items-center rounded-full border border-border text-muted-foreground"

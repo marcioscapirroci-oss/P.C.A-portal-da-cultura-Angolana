@@ -5,6 +5,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ArticleEngagement } from "@/components/ArticleEngagement";
 import { useSiteSettings } from "@/lib/site-settings";
 import { getPublishedArticle } from "@/lib/public-articles.functions";
+import { blocksFromLegacyContent, normalizeBlocks, type ContentBlock } from "@/lib/article-blocks";
+
 
 export const Route = createFileRoute("/artigo/$slug")({
   loader: async ({ params }) => {
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/artigo/$slug")({
           id: dbArticle.id,
           slug: dbArticle.slug,
           title: dbArticle.title,
+          subtitle: dbArticle.subtitle ?? "",
           excerpt: dbArticle.excerpt ?? "",
           category: dbArticle.category,
           image: dbArticle.cover_image ?? "",
@@ -24,7 +27,9 @@ export const Route = createFileRoute("/artigo/$slug")({
             : "",
           readTime: "5 min",
           content: dbArticle.content ?? "",
+          blocks: (Array.isArray(dbArticle.blocks) ? dbArticle.blocks : []) as ContentBlock[],
         },
+
       };
     }
     return { article: null };
@@ -90,7 +95,11 @@ function ArticlePage() {
   const { slug } = Route.useParams();
   const { settings } = useSiteSettings();
   const fallback = settings.home.demo_articles.find((a) => a.slug === slug);
-  const article = dbArticle ?? (fallback ? { id: "", ...fallback, content: fallback.content ?? "" } : null);
+  const article = dbArticle
+    ?? (fallback
+      ? { id: "", ...fallback, subtitle: "", content: fallback.content ?? "", blocks: [] as ContentBlock[] }
+      : null);
+
 
   if (!article) {
     return (
