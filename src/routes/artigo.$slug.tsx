@@ -5,6 +5,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ArticleEngagement } from "@/components/ArticleEngagement";
 import { useSiteSettings } from "@/lib/site-settings";
 import { getPublishedArticle } from "@/lib/public-articles.functions";
+import { blocksFromLegacyContent, normalizeBlocks, type ContentBlock } from "@/lib/article-blocks";
+
 
 export const Route = createFileRoute("/artigo/$slug")({
   loader: async ({ params }) => {
