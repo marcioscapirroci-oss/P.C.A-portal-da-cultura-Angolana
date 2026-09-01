@@ -15,6 +15,7 @@ export const Route = createFileRoute("/artigo/$slug")({
           id: dbArticle.id,
           slug: dbArticle.slug,
           title: dbArticle.title,
+          subtitle: dbArticle.subtitle ?? "",
           excerpt: dbArticle.excerpt ?? "",
           category: dbArticle.category,
           image: dbArticle.cover_image ?? "",
@@ -24,7 +25,9 @@ export const Route = createFileRoute("/artigo/$slug")({
             : "",
           readTime: "5 min",
           content: dbArticle.content ?? "",
+          blocks: (Array.isArray(dbArticle.blocks) ? dbArticle.blocks : []) as ContentBlock[],
         },
+
       };
     }
     return { article: null };
