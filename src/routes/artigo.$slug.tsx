@@ -93,7 +93,11 @@ function ArticlePage() {
   const { slug } = Route.useParams();
   const { settings } = useSiteSettings();
   const fallback = settings.home.demo_articles.find((a) => a.slug === slug);
-  const article = dbArticle ?? (fallback ? { id: "", ...fallback, content: fallback.content ?? "" } : null);
+  const article = dbArticle
+    ?? (fallback
+      ? { id: "", ...fallback, subtitle: "", content: fallback.content ?? "", blocks: [] as ContentBlock[] }
+      : null);
+
 
   if (!article) {
     return (
