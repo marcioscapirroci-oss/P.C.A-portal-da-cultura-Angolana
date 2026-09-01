@@ -43,6 +43,7 @@ export type Database = {
       articles: {
         Row: {
           author_id: string | null
+          blocks: Json
           category: string
           content: string | null
           cover_image: string | null
@@ -52,12 +53,14 @@ export type Database = {
           published_at: string | null
           slug: string
           status: Database["public"]["Enums"]["article_status"]
+          subtitle: string | null
           title: string
           updated_at: string
           views: number
         }
         Insert: {
           author_id?: string | null
+          blocks?: Json
           category: string
           content?: string | null
           cover_image?: string | null
@@ -67,12 +70,14 @@ export type Database = {
           published_at?: string | null
           slug: string
           status?: Database["public"]["Enums"]["article_status"]
+          subtitle?: string | null
           title: string
           updated_at?: string
           views?: number
         }
         Update: {
           author_id?: string | null
+          blocks?: Json
           category?: string
           content?: string | null
           cover_image?: string | null
@@ -82,6 +87,7 @@ export type Database = {
           published_at?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["article_status"]
+          subtitle?: string | null
           title?: string
           updated_at?: string
           views?: number
