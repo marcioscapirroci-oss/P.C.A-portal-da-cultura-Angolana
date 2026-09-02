@@ -115,7 +115,9 @@ function ArticlePage() {
   }
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const wa = `https://wa.me/?text=${encodeURIComponent(article.title + " — " + shareUrl)}`;
-  const html = article.content ? renderContent(article.content) : "";
+  const stored = normalizeBlocks(article.blocks);
+  const blocks = stored.length ? stored : blocksFromLegacyContent(article.content ?? "");
+
 
   return (
     <div className="min-h-screen bg-background">
