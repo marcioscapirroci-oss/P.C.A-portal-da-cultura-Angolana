@@ -12,9 +12,12 @@ import {
   listArticlesAdmin,
   upsertArticle,
 } from "@/lib/admin.functions";
+import { aiEditorAssist } from "@/lib/ai-editor.functions";
+import { blocksFromLegacyContent, normalizeBlocks, type ContentBlock } from "@/lib/article-blocks";
 import { SiteSettingsPanel } from "@/components/SiteSettingsPanel";
 import { useSiteSettings } from "@/lib/site-settings";
-import { BarChart3, Eye, FileText, LogOut, Plus, Trash2, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowDown, ArrowUp, BarChart3, Eye, FileText, LogOut, Plus, Sparkles, Trash2, Loader2, ShieldAlert } from "lucide-react";
+
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -234,6 +237,16 @@ function StatusPill({ status }: { status: Article["status"] }) {
   return <span className={`rounded-full px-2 py-0.5 ${map.c}`}>{map.l}</span>;
 }
 
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100);
+}
+
 function EditorModal({
   initial, onClose, onSave, saving,
 }: {
@@ -243,57 +256,158 @@ function EditorModal({
   saving: boolean;
 }) {
   const { settings } = useSiteSettings();
+  const assist = useServerFn(aiEditorAssist);
+  const [aiBusy, setAiBusy] = useState<string | null>(null);
+
+  const initialBlocks = (() => {
+    const b = normalizeBlocks((initial as any).blocks);
+    if (b.length) return b;
+    const legacy = blocksFromLegacyContent((initial as any).content ?? "");
+    return legacy.length ? legacy : [{ type: "text", text: "" } as ContentBlock];
+  })();
+
   const [form, setForm] = useState<any>({
     id: initial.id,
     title: initial.title ?? "",
+    subtitle: (initial as any).subtitle ?? "",
     slug: initial.slug ?? "",
     excerpt: (initial as any).excerpt ?? "",
-    content: (initial as any).content ?? "",
-    category: initial.category ?? "Notícias",
+    category: initial.category ?? settings.categories[0]?.label ?? "Notícias",
     cover_image: (initial as any).cover_image ?? "",
     status: initial.status ?? "draft",
     published_at: initial.published_at ?? null,
   });
-  const [picker, setPicker] = useState<null | "cover" | "content">(null);
+  const [blocks, setBlocks] = useState<ContentBlock[]>(initialBlocks);
+  const [picker, setPicker] = useState<null | { kind: "cover" } | { kind: "block"; index: number }>(null);
 
   function set<K extends string>(k: K, v: any) {
     setForm((f: any) => ({ ...f, [k]: v }));
   }
 
-  function insertIntoContent(asset: { url: string; mimeType: string }) {
-    const snippet = asset.mimeType.startsWith("video/")
-      ? `\n\n<video src="${asset.url}" controls playsinline style="width:100%;border-radius:14px"></video>\n\n`
-      : `\n\n![](${asset.url})\n\n`;
-    set("content", (form.content ?? "") + snippet);
+  function updateBlock(i: number, patch: Partial<ContentBlock>) {
+    setBlocks((bs) => bs.map((b, idx) => (idx === i ? ({ ...b, ...patch } as ContentBlock) : b)));
+  }
+  function addBlock(type: ContentBlock["type"], at?: number) {
+    const nb: ContentBlock = type === "text" ? { type: "text", text: "" } : { type, url: "", caption: "" };
+    setBlocks((bs) => {
+      const copy = [...bs];
+      copy.splice(at === undefined ? copy.length : at + 1, 0, nb);
+      return copy;
+    });
+  }
+  function removeBlock(i: number) {
+    setBlocks((bs) => bs.filter((_, idx) => idx !== i));
+  }
+  function moveBlock(i: number, dir: -1 | 1) {
+    setBlocks((bs) => {
+      const j = i + dir;
+      if (j < 0 || j >= bs.length) return bs;
+      const copy = [...bs];
+      const [item] = copy.splice(i, 1);
+      copy.splice(j, 0, item);
+      return copy;
+    });
+  }
+
+  const fullText = () =>
+    blocks
+      .filter((b): b is Extract<ContentBlock, { type: "text" }> => b.type === "text")
+      .map((b) => b.text)
+      .join("\n\n")
+      .trim();
+
+  async function runAi(mode: "improve" | "rewrite" | "spelling" | "title" | "subtitle" | "summary", blockIndex?: number) {
+    const source = blockIndex !== undefined ? (blocks[blockIndex] as any).text : fullText();
+    if (!source || source.trim().length < 10) {
+      toast.error("Escreva algum texto primeiro.");
+      return;
+    }
+    const key = `${mode}-${blockIndex ?? "all"}`;
+    setAiBusy(key);
+    try {
+      const res = await assist({ data: { mode, text: source, context: form.title } });
+      if (res.error || !res.text) {
+        toast.error(res.error || "A IA não respondeu.");
+        return;
+      }
+      if (mode === "title") set("title", res.text.replace(/^["“]|["”]$/g, ""));
+      else if (mode === "subtitle") set("subtitle", res.text);
+      else if (mode === "summary") set("excerpt", res.text.slice(0, 500));
+      else if (blockIndex !== undefined) updateBlock(blockIndex, { text: res.text } as any);
+      else setBlocks([{ type: "text", text: res.text }]);
+      toast.success("Texto atualizado pela IA");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falha da IA");
+    } finally {
+      setAiBusy(null);
+    }
   }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    const clean = blocks.filter((b) => (b.type === "text" ? b.text.trim() : b.url));
     onSave({
       ...form,
+      slug: form.slug || slugify(form.title),
+      subtitle: form.subtitle || null,
       excerpt: form.excerpt || null,
-      content: form.content || null,
+      blocks: clean,
+      content: clean
+        .map((b) => (b.type === "text" ? b.text : b.type === "image" ? `![${b.caption ?? ""}](${b.url})` : `<video src="${b.url}"></video>`))
+        .join("\n\n")
+        .slice(0, 50000) || null,
       cover_image: form.cover_image || null,
       published_at: form.published_at || null,
     });
   }
+
+  const AiBtn = ({ mode, index, label }: { mode: any; index?: number; label: string }) => (
+    <button
+      type="button"
+      onClick={() => runAi(mode, index)}
+      disabled={aiBusy !== null}
+      className="inline-flex items-center gap-1 rounded-full border border-primary/40 px-3 py-1 text-[11px] text-primary disabled:opacity-50"
+    >
+      {aiBusy === `${mode}-${index ?? "all"}` ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+      {label}
+    </button>
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 backdrop-blur sm:items-center" onClick={onClose}>
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={submit}
-        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border border-border bg-card p-6 shadow-elegant sm:rounded-3xl"
+        className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl border border-border bg-card p-6 shadow-elegant sm:rounded-3xl"
       >
         <h2 className="font-display text-2xl">{form.id ? "Editar matéria" : "Nova matéria"}</h2>
 
         <div className="mt-6 space-y-4">
-          <Field label="Título"><input required maxLength={200} value={form.title} onChange={(e) => set("title", e.target.value)} className={inputClass} /></Field>
-          <Field label="Slug (url)"><input required pattern="[a-z0-9-]+" value={form.slug} onChange={(e) => set("slug", e.target.value)} className={inputClass} placeholder="ex: entrevista-bonga" /></Field>
+          <Field label="Título">
+            <input
+              required
+              maxLength={200}
+              value={form.title}
+              onChange={(e) => {
+                set("title", e.target.value);
+                if (!form.id && !initial.slug) set("slug", slugify(e.target.value));
+              }}
+              className={inputClass}
+            />
+            <div className="mt-2 flex flex-wrap gap-2"><AiBtn mode="title" label="Gerar título com IA" /></div>
+          </Field>
+
+          <Field label="Subtítulo">
+            <input maxLength={300} value={form.subtitle} onChange={(e) => set("subtitle", e.target.value)} className={inputClass} />
+            <div className="mt-2 flex flex-wrap gap-2"><AiBtn mode="subtitle" label="Gerar subtítulo com IA" /></div>
+          </Field>
+
+          <Field label="Slug (url)"><input required pattern="[a-z0-9-]+" value={form.slug} onChange={(e) => set("slug", slugify(e.target.value))} className={inputClass} placeholder="ex: entrevista-bonga" /></Field>
+
           <div className="grid grid-cols-2 gap-4">
             <Field label="Categoria">
               <select value={form.category} onChange={(e) => set("category", e.target.value)} className={inputClass}>
-                {settings.categories.map((c)=>(<option key={c.slug}>{c.label}</option>))}
+                {settings.categories.map((c) => (<option key={c.slug}>{c.label}</option>))}
               </select>
             </Field>
             <Field label="Estado">
@@ -304,18 +418,22 @@ function EditorModal({
               </select>
             </Field>
           </div>
+          <p className="-mt-2 text-[11px] text-muted-foreground">
+            Ao publicar, a matéria aparece automaticamente na página inicial, no menu e na página de <span className="text-primary">{form.category}</span> e na pesquisa.
+          </p>
+
           {(form.status === "scheduled" || form.status === "published") && (
             <Field label="Data de publicação">
               <input
                 type="datetime-local"
-                value={form.published_at ? new Date(form.published_at).toISOString().slice(0,16) : ""}
+                value={form.published_at ? new Date(form.published_at).toISOString().slice(0, 16) : ""}
                 onChange={(e) => set("published_at", e.target.value ? new Date(e.target.value).toISOString() : null)}
                 className={inputClass}
               />
             </Field>
           )}
 
-          <Field label="Imagem de capa">
+          <Field label="Imagem de capa / destaque">
             <div className="flex items-center gap-3">
               <div className="h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-border bg-background">
                 {form.cover_image ? (
@@ -325,7 +443,7 @@ function EditorModal({
                 )}
               </div>
               <div className="flex flex-col gap-2">
-                <button type="button" onClick={() => setPicker("cover")} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium text-primary-foreground">
+                <button type="button" onClick={() => setPicker({ kind: "cover" })} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium text-primary-foreground">
                   Carregar / escolher
                 </button>
                 {form.cover_image && (
@@ -337,26 +455,87 @@ function EditorModal({
             </div>
           </Field>
 
-          <Field label="Resumo"><textarea rows={2} maxLength={500} value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} className={inputClass} /></Field>
+          <Field label="Resumo">
+            <textarea rows={2} maxLength={500} value={form.excerpt} onChange={(e) => set("excerpt", e.target.value)} className={inputClass} />
+            <div className="mt-2 flex flex-wrap gap-2"><AiBtn mode="summary" label="Gerar resumo com IA" /></div>
+          </Field>
 
           <div>
-            <div className="mb-1 flex items-end justify-between">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">Conteúdo</span>
-              <button type="button" onClick={() => setPicker("content")} className="text-[11px] text-primary hover:underline">
-                + Inserir imagem ou vídeo
-              </button>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">Corpo da matéria</span>
+              <div className="flex flex-wrap gap-2">
+                <AiBtn mode="improve" label="Melhorar tudo" />
+                <AiBtn mode="spelling" label="Corrigir ortografia" />
+              </div>
             </div>
-            <textarea
-              rows={10}
-              maxLength={50000}
-              value={form.content}
-              onChange={(e) => set("content", e.target.value)}
-              className={inputClass}
-              placeholder="Escreva a matéria. Pode inserir imagens e vídeos pelo botão acima."
-            />
-            <p className="mt-1 text-[10px] text-muted-foreground">
-              Suporta markdown <code>![](url)</code> e tags <code>&lt;video&gt;</code>.
-            </p>
+
+            <div className="space-y-3">
+              {blocks.map((b, i) => (
+                <div key={i} className="rounded-2xl border border-border/60 bg-background/60 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {b.type === "text" ? "Texto" : b.type === "image" ? "Imagem" : "Vídeo"}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => moveBlock(i, -1)} className="rounded-full border border-border p-1"><ArrowUp className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => moveBlock(i, 1)} className="rounded-full border border-border p-1"><ArrowDown className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => removeBlock(i)} className="rounded-full border border-destructive/50 p-1 text-destructive-foreground/90"><Trash2 className="h-3 w-3" /></button>
+                    </div>
+                  </div>
+
+                  {b.type === "text" ? (
+                    <>
+                      <textarea
+                        rows={6}
+                        value={b.text}
+                        onChange={(e) => updateBlock(i, { text: e.target.value } as any)}
+                        className={inputClass}
+                        placeholder="Escreva este parágrafo…"
+                      />
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <AiBtn mode="improve" index={i} label="Melhorar" />
+                        <AiBtn mode="rewrite" index={i} label="Reescrever" />
+                        <AiBtn mode="spelling" index={i} label="Ortografia" />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-start gap-3">
+                        <div className="h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-border bg-background">
+                          {b.url ? (
+                            b.type === "image" ? <img src={b.url} alt="" className="h-full w-full object-cover" /> : <video src={b.url} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="grid h-full w-full place-items-center text-[10px] text-muted-foreground">sem ficheiro</div>
+                          )}
+                        </div>
+                        <button type="button" onClick={() => setPicker({ kind: "block", index: i })} className="rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium text-primary-foreground">
+                          Carregar / escolher
+                        </button>
+                      </div>
+                      <input
+                        value={b.caption ?? ""}
+                        onChange={(e) => updateBlock(i, { caption: e.target.value } as any)}
+                        placeholder="Legenda da imagem"
+                        className={`${inputClass} mt-3`}
+                      />
+                    </>
+                  )}
+
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-border/50 pt-3 text-[11px]">
+                    <span className="text-muted-foreground">Inserir a seguir:</span>
+                    <button type="button" onClick={() => addBlock("text", i)} className="text-primary hover:underline">+ texto</button>
+                    <button type="button" onClick={() => addBlock("image", i)} className="text-primary hover:underline">+ imagem</button>
+                    <button type="button" onClick={() => addBlock("video", i)} className="text-primary hover:underline">+ vídeo</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <button type="button" onClick={() => addBlock("text")} className="rounded-full border border-border px-3 py-1.5">+ Bloco de texto</button>
+              <button type="button" onClick={() => addBlock("image")} className="rounded-full border border-border px-3 py-1.5">+ Imagem</button>
+              <button type="button" onClick={() => addBlock("video")} className="rounded-full border border-border px-3 py-1.5">+ Vídeo</button>
+            </div>
           </div>
         </div>
 
@@ -370,11 +549,14 @@ function EditorModal({
 
       {picker && (
         <MediaPicker
-          accept={picker === "cover" ? "image/*" : "image/*,video/*"}
+          accept={picker.kind === "cover" ? "image/*" : "image/*,video/*"}
           onClose={() => setPicker(null)}
           onSelect={(a) => {
-            if (picker === "cover") set("cover_image", a.url);
-            else insertIntoContent(a);
+            if (picker.kind === "cover") set("cover_image", a.url);
+            else {
+              const type = a.mimeType.startsWith("video/") ? "video" : "image";
+              updateBlock(picker.index, { type, url: a.url } as any);
+            }
             setPicker(null);
           }}
         />
@@ -392,3 +574,4 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+

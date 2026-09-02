@@ -59,36 +59,8 @@ export const Route = createFileRoute("/artigo/$slug")({
   component: ArticlePage,
 });
 
-// Minimal, safe renderer for markdown images + <video> tags + paragraphs.
-// Strips any other HTML to avoid XSS.
-function renderContent(raw: string): string {
-  const escape = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-  const blocks: string[] = [];
-  // Tokenize by media markers
-  const re = /(!\[[^\]]*\]\(([^)\s]+)\))|(<video\s+src="([^"]+)"[^>]*><\/video>)/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(raw)) !== null) {
-    if (m.index > last) blocks.push(textBlock(raw.slice(last, m.index)));
-    if (m[2]) {
-      blocks.push(`<img src="${escape(m[2])}" alt="" class="my-6 w-full rounded-2xl" loading="lazy" />`);
-    } else if (m[4]) {
-      blocks.push(
-        `<video src="${escape(m[4])}" controls playsinline class="my-6 w-full rounded-2xl"></video>`,
-      );
-    }
-    last = re.lastIndex;
-  }
-  if (last < raw.length) blocks.push(textBlock(raw.slice(last)));
-  return blocks.join("\n");
 
-  function textBlock(t: string): string {
-    const paras = escape(t).split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
-    return paras.map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`).join("");
-  }
-}
 
 function ArticlePage() {
   const { article: dbArticle } = Route.useLoaderData();
@@ -115,7 +87,9 @@ function ArticlePage() {
   }
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
   const wa = `https://wa.me/?text=${encodeURIComponent(article.title + " — " + shareUrl)}`;
-  const html = article.content ? renderContent(article.content) : "";
+  const stored = normalizeBlocks(article.blocks);
+  const blocks = stored.length ? stored : blocksFromLegacyContent(article.content ?? "");
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,7 +102,11 @@ function ArticlePage() {
 
         <p className="mt-8 text-[11px] uppercase tracking-[0.3em] text-primary">{article.category}</p>
         <h1 className="mt-3 font-display text-4xl leading-tight md:text-6xl">{article.title}</h1>
+        {article.subtitle && (
+          <p className="mt-4 font-display text-xl leading-snug text-foreground/80">{article.subtitle}</p>
+        )}
         <p className="mt-6 text-lg leading-relaxed text-muted-foreground">{article.excerpt}</p>
+
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-y border-border/60 py-4 text-xs text-muted-foreground">
           <span>Por {article.author} · {article.date} · {article.readTime} de leitura</span>
@@ -141,16 +119,34 @@ function ArticlePage() {
           <img src={article.image} alt={article.title} className="h-full w-full object-cover" />
         </div>
 
-        {html ? (
-          <div
-            className="prose prose-invert mt-10 max-w-none text-base leading-[1.85] text-foreground/90"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+        {blocks.length ? (
+          <div className="mt-10 space-y-6">
+            {blocks.map((b, i) =>
+              b.type === "text" ? (
+                <div key={i} className="prose prose-invert max-w-none text-base leading-[1.85] text-foreground/90">
+                  {b.text.split(/\n{2,}/).map((p, j) => (
+                    <p key={j}>{p}</p>
+                  ))}
+                </div>
+              ) : b.type === "image" ? (
+                <figure key={i}>
+                  <img src={b.url} alt={b.caption || article.title} className="w-full rounded-2xl" loading="lazy" />
+                  {b.caption && <figcaption className="mt-2 text-center text-xs text-muted-foreground">{b.caption}</figcaption>}
+                </figure>
+              ) : (
+                <figure key={i}>
+                  <video src={b.url} controls playsInline className="w-full rounded-2xl" />
+                  {b.caption && <figcaption className="mt-2 text-center text-xs text-muted-foreground">{b.caption}</figcaption>}
+                </figure>
+              ),
+            )}
+          </div>
         ) : (
           <div className="prose prose-invert mt-10 max-w-none text-base leading-[1.85] text-foreground/90">
             <p>Conteúdo em preparação.</p>
           </div>
         )}
+
 
         {article.id && <ArticleEngagement articleId={article.id} />}
       </article>
