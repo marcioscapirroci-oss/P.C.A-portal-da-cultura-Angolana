@@ -147,16 +147,34 @@ function ArticlePage() {
           <img src={article.image} alt={article.title} className="h-full w-full object-cover" />
         </div>
 
-        {html ? (
-          <div
-            className="prose prose-invert mt-10 max-w-none text-base leading-[1.85] text-foreground/90"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+        {blocks.length ? (
+          <div className="mt-10 space-y-6">
+            {blocks.map((b, i) =>
+              b.type === "text" ? (
+                <div key={i} className="prose prose-invert max-w-none text-base leading-[1.85] text-foreground/90">
+                  {b.text.split(/\n{2,}/).map((p, j) => (
+                    <p key={j}>{p}</p>
+                  ))}
+                </div>
+              ) : b.type === "image" ? (
+                <figure key={i}>
+                  <img src={b.url} alt={b.caption || article.title} className="w-full rounded-2xl" loading="lazy" />
+                  {b.caption && <figcaption className="mt-2 text-center text-xs text-muted-foreground">{b.caption}</figcaption>}
+                </figure>
+              ) : (
+                <figure key={i}>
+                  <video src={b.url} controls playsInline className="w-full rounded-2xl" />
+                  {b.caption && <figcaption className="mt-2 text-center text-xs text-muted-foreground">{b.caption}</figcaption>}
+                </figure>
+              ),
+            )}
+          </div>
         ) : (
           <div className="prose prose-invert mt-10 max-w-none text-base leading-[1.85] text-foreground/90">
             <p>Conteúdo em preparação.</p>
           </div>
         )}
+
 
         {article.id && <ArticleEngagement articleId={article.id} />}
       </article>
