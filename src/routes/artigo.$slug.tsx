@@ -59,36 +59,8 @@ export const Route = createFileRoute("/artigo/$slug")({
   component: ArticlePage,
 });
 
-// Minimal, safe renderer for markdown images + <video> tags + paragraphs.
-// Strips any other HTML to avoid XSS.
-function renderContent(raw: string): string {
-  const escape = (s: string) =>
-    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-  const blocks: string[] = [];
-  // Tokenize by media markers
-  const re = /(!\[[^\]]*\]\(([^)\s]+)\))|(<video\s+src="([^"]+)"[^>]*><\/video>)/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(raw)) !== null) {
-    if (m.index > last) blocks.push(textBlock(raw.slice(last, m.index)));
-    if (m[2]) {
-      blocks.push(`<img src="${escape(m[2])}" alt="" class="my-6 w-full rounded-2xl" loading="lazy" />`);
-    } else if (m[4]) {
-      blocks.push(
-        `<video src="${escape(m[4])}" controls playsinline class="my-6 w-full rounded-2xl"></video>`,
-      );
-    }
-    last = re.lastIndex;
-  }
-  if (last < raw.length) blocks.push(textBlock(raw.slice(last)));
-  return blocks.join("\n");
 
-  function textBlock(t: string): string {
-    const paras = escape(t).split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
-    return paras.map((p) => `<p>${p.replace(/\n/g, "<br/>")}</p>`).join("");
-  }
-}
 
 function ArticlePage() {
   const { article: dbArticle } = Route.useLoaderData();
