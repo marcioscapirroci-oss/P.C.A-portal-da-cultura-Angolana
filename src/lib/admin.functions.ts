@@ -42,7 +42,15 @@ const articleInput = z.object({
   category: z.string().min(2).max(60),
   cover_image: z.string().url().max(500).optional().nullable(),
   status: z.enum(["draft", "scheduled", "published"]),
-  published_at: z.string().datetime().optional().nullable(),
+  published_at: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => {
+      if (!v) return null;
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? null : d.toISOString();
+    }),
 });
 
 export const listArticlesAdmin = createServerFn({ method: "GET" })
