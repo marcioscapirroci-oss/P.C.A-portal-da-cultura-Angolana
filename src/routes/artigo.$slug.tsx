@@ -130,7 +130,11 @@ function ArticlePage() {
 
         <p className="mt-8 text-[11px] uppercase tracking-[0.3em] text-primary">{article.category}</p>
         <h1 className="mt-3 font-display text-4xl leading-tight md:text-6xl">{article.title}</h1>
+        {article.subtitle && (
+          <p className="mt-4 font-display text-xl leading-snug text-foreground/80">{article.subtitle}</p>
+        )}
         <p className="mt-6 text-lg leading-relaxed text-muted-foreground">{article.excerpt}</p>
+
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-y border-border/60 py-4 text-xs text-muted-foreground">
           <span>Por {article.author} · {article.date} · {article.readTime} de leitura</span>
