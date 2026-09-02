@@ -49,8 +49,10 @@ export type Database = {
           cover_image: string | null
           created_at: string
           excerpt: string | null
+          gallery_id: string | null
           id: string
           published_at: string | null
+          related_videos: Json
           slug: string
           status: Database["public"]["Enums"]["article_status"]
           subtitle: string | null
@@ -66,8 +68,10 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           excerpt?: string | null
+          gallery_id?: string | null
           id?: string
           published_at?: string | null
+          related_videos?: Json
           slug: string
           status?: Database["public"]["Enums"]["article_status"]
           subtitle?: string | null
@@ -83,8 +87,10 @@ export type Database = {
           cover_image?: string | null
           created_at?: string
           excerpt?: string | null
+          gallery_id?: string | null
           id?: string
           published_at?: string | null
+          related_videos?: Json
           slug?: string
           status?: Database["public"]["Enums"]["article_status"]
           subtitle?: string | null
@@ -92,7 +98,15 @@ export type Database = {
           updated_at?: string
           views?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "articles_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "galleries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       comments: {
         Row: {
@@ -208,6 +222,109 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      galleries: {
+        Row: {
+          article_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          published: boolean
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          article_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          published?: boolean
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          published?: boolean
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "galleries_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_items: {
+        Row: {
+          caption: string | null
+          created_at: string
+          credit: string | null
+          gallery_id: string
+          id: string
+          is_cover: boolean
+          media_type: string
+          mime_type: string | null
+          position: number
+          size_bytes: number | null
+          storage_path: string | null
+          thumbnail_url: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          credit?: string | null
+          gallery_id: string
+          id?: string
+          is_cover?: boolean
+          media_type?: string
+          mime_type?: string | null
+          position?: number
+          size_bytes?: number | null
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          credit?: string | null
+          gallery_id?: string
+          id?: string
+          is_cover?: boolean
+          media_type?: string
+          mime_type?: string | null
+          position?: number
+          size_bytes?: number | null
+          storage_path?: string | null
+          thumbnail_url?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_items_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "galleries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
