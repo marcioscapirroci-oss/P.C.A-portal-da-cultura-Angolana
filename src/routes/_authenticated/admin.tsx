@@ -12,9 +12,12 @@ import {
   listArticlesAdmin,
   upsertArticle,
 } from "@/lib/admin.functions";
+import { aiEditorAssist } from "@/lib/ai-editor.functions";
+import { blocksFromLegacyContent, normalizeBlocks, type ContentBlock } from "@/lib/article-blocks";
 import { SiteSettingsPanel } from "@/components/SiteSettingsPanel";
 import { useSiteSettings } from "@/lib/site-settings";
-import { BarChart3, Eye, FileText, LogOut, Plus, Trash2, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowDown, ArrowUp, BarChart3, Eye, FileText, LogOut, Plus, Sparkles, Trash2, Loader2, ShieldAlert } from "lucide-react";
+
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
