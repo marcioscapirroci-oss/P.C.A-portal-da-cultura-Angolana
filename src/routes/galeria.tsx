@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Play, X, Image as ImageIcon, Video as VideoI
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { listGalleryMedia, type GalleryItem } from "@/lib/gallery.functions";
+import { listPublicGalleries } from "@/lib/galleries.functions";
 
 export const Route = createFileRoute("/galeria")({
   head: () => ({
@@ -14,7 +15,26 @@ export const Route = createFileRoute("/galeria")({
       { property: "og:description", content: "Navegue pelas fotos e vídeos do portal PCArt — Plataforma da Cultura Angolana." },
     ],
   }),
-  loader: () => listGalleryMedia(),
+  loader: async () => {
+    const [storage, db] = await Promise.all([listGalleryMedia(), listPublicGalleries()]);
+    const curated: GalleryItem[] = (db.galleries ?? []).flatMap((g) =>
+      (g.items ?? []).map((it) => ({
+        path: it.id,
+        name: it.caption || g.title,
+        url: it.url,
+        type: it.media_type,
+        mimeType: it.mime_type ?? "",
+        size: 0,
+        createdAt: null,
+        caption: it.caption,
+        credit: it.credit,
+        gallery: g.title,
+      })),
+    );
+    const seen = new Set(curated.map((i) => i.url));
+    const rest = (storage.items ?? []).filter((i) => !seen.has(i.url));
+    return { items: [...curated, ...rest] };
+  },
   component: GalleryPage,
   errorComponent: ({ error }) => (
     <div className="min-h-screen grid place-items-center bg-background p-6 text-center">
@@ -230,6 +250,8 @@ function Lightbox({
 
   if (!current) return null;
 
+  const caption = (current as any).caption as string | null | undefined;
+  const credit = (current as any).credit as string | null | undefined;
   const shareUrl = current.url;
   const shareText = `${current.name} — PCArt — Plataforma da Cultura Angolana`;
   const wa = `https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`;
@@ -297,8 +319,10 @@ function Lightbox({
 
       <div className="absolute inset-x-0 bottom-0 z-10 border-t border-white/10 bg-black/60 px-4 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-3">
+          {caption ? <p className="text-center text-sm text-white/90">{caption}</p> : null}
           <p className="text-center text-[11px] text-white/60">
             {index + 1} / {items.length} · <span className="text-white/80">{current.name}</span>
+            {credit ? <span> · Crédito: {credit}</span> : null}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <a

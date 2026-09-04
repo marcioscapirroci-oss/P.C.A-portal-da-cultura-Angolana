@@ -42,6 +42,12 @@ const articleInput = z.object({
   category: z.string().min(2).max(60),
   cover_image: z.string().url().max(500).optional().nullable(),
   status: z.enum(["draft", "scheduled", "published"]),
+  gallery_id: z.string().uuid().optional().nullable(),
+  related_videos: z
+    .array(z.object({ url: z.string().max(2000), caption: z.string().max(300).optional().default("") }))
+    .max(50)
+    .optional()
+    .default([]),
   published_at: z
     .string()
     .optional()
@@ -59,7 +65,7 @@ export const listArticlesAdmin = createServerFn({ method: "GET" })
     await assertStaff(context);
     const { data, error } = await context.supabase
       .from("articles")
-      .select("id, slug, title, subtitle, excerpt, content, blocks, cover_image, category, status, published_at, views, updated_at")
+      .select("id, slug, title, subtitle, excerpt, content, blocks, cover_image, category, status, published_at, views, updated_at, gallery_id, related_videos")
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
     return { articles: data ?? [] };

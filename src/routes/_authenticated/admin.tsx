@@ -15,6 +15,8 @@ import {
 import { aiEditorAssist } from "@/lib/ai-editor.functions";
 import { blocksFromLegacyContent, normalizeBlocks, type ContentBlock } from "@/lib/article-blocks";
 import { SiteSettingsPanel } from "@/components/SiteSettingsPanel";
+import { GalleryManager } from "@/components/GalleryManager";
+import { listGalleriesAdmin } from "@/lib/galleries.functions";
 import { useSiteSettings } from "@/lib/site-settings";
 import { ArrowDown, ArrowUp, BarChart3, Eye, FileText, LogOut, Plus, Sparkles, Trash2, Loader2, ShieldAlert } from "lucide-react";
 
@@ -42,7 +44,7 @@ function AdminPage() {
   const saveFn = useServerFn(upsertArticle);
   const removeFn = useServerFn(deleteArticle);
   const [editing, setEditing] = useState<Partial<Article> | null>(null);
-  const [tab, setTab] = useState<"materias" | "definicoes">("materias");
+  const [tab, setTab] = useState<"materias" | "galerias" | "definicoes">("materias");
 
   const rolesQ = useQuery({ queryKey: ["my-roles"], queryFn: () => fetchRoles() });
   const isStaff = rolesQ.data?.roles?.some((r) => r === "jornalista" || r === "admin" || r === "super_admin" || r === "editor");
@@ -128,7 +130,7 @@ function AdminPage() {
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary">Painel editorial</p>
             <h1 className="mt-1 font-display text-3xl md:text-4xl">
-              {tab === "materias" ? "Gestão de matérias" : "Definições da plataforma"}
+              {tab === "materias" ? "Gestão de matérias" : tab === "galerias" ? "Galeria multimédia" : "Definições da plataforma"}
             </h1>
           </div>
           <div className="flex shrink-0 gap-2">
@@ -147,7 +149,7 @@ function AdminPage() {
         </div>
 
         <div className="mt-6 flex gap-2">
-          {(["materias", "definicoes"] as const).map((t) => (
+          {(["materias", "galerias", "definicoes"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -155,12 +157,16 @@ function AdminPage() {
                 tab === t ? "border-primary text-primary" : "border-border text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t === "materias" ? "Matérias" : "Definições"}
+              {t === "materias" ? "Matérias" : t === "galerias" ? "Galerias" : "Definições"}
             </button>
           ))}
         </div>
 
-        {tab === "definicoes" ? (
+        {tab === "galerias" ? (
+          <div className="mt-8">
+            <GalleryManager />
+          </div>
+        ) : tab === "definicoes" ? (
           <div className="mt-8">
             <SiteSettingsPanel />
           </div>
@@ -257,6 +263,7 @@ function EditorModal({
 }) {
   const { settings } = useSiteSettings();
   const assist = useServerFn(aiEditorAssist);
+  const listGalleriesFn = useServerFn(listGalleriesAdmin);
   const [aiBusy, setAiBusy] = useState<string | null>(null);
 
   const initialBlocks = (() => {
@@ -276,9 +283,16 @@ function EditorModal({
     cover_image: (initial as any).cover_image ?? "",
     status: initial.status ?? "draft",
     published_at: initial.published_at ?? null,
+    gallery_id: (initial as any).gallery_id ?? "",
   });
+  const [relatedVideos, setRelatedVideos] = useState<{ url: string; caption: string }[]>(
+    Array.isArray((initial as any).related_videos)
+      ? ((initial as any).related_videos as any[]).map((v) => ({ url: String(v?.url ?? ""), caption: String(v?.caption ?? "") }))
+      : [],
+  );
+  const galleriesQ = useQuery({ queryKey: ["admin-galleries"], queryFn: () => listGalleriesFn() });
   const [blocks, setBlocks] = useState<ContentBlock[]>(initialBlocks);
-  const [picker, setPicker] = useState<null | { kind: "cover" } | { kind: "block"; index: number }>(null);
+  const [picker, setPicker] = useState<null | { kind: "cover" } | { kind: "block"; index: number } | { kind: "relvideo"; index: number }>(null);
 
   function set<K extends string>(k: K, v: any) {
     setForm((f: any) => ({ ...f, [k]: v }));
@@ -358,6 +372,8 @@ function EditorModal({
         .slice(0, 50000) || null,
       cover_image: form.cover_image || null,
       published_at: form.published_at || null,
+      gallery_id: form.gallery_id || null,
+      related_videos: relatedVideos.filter((v) => v.url.trim()),
     });
   }
 
@@ -460,6 +476,45 @@ function EditorModal({
             <div className="mt-2 flex flex-wrap gap-2"><AiBtn mode="summary" label="Gerar resumo com IA" /></div>
           </Field>
 
+          <Field label="Galeria multimédia associada">
+            <select value={form.gallery_id} onChange={(e) => set("gallery_id", e.target.value)} className={inputClass}>
+              <option value="">Sem galeria associada</option>
+              {(galleriesQ.data?.galleries ?? []).map((g: any) => (
+                <option key={g.id} value={g.id}>
+                  {g.title} ({g.items?.length ?? 0} conteúdos)
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Escolha uma galeria já existente — as fotos e vídeos aparecem no fim da matéria.
+            </p>
+          </Field>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">Vídeos relacionados</span>
+              <button type="button" onClick={() => setRelatedVideos((v) => [...v, { url: "", caption: "" }])} className="text-[11px] text-primary hover:underline">+ adicionar vídeo</button>
+            </div>
+            {relatedVideos.length === 0 ? (
+              <p className="text-[11px] text-muted-foreground">Nenhum vídeo relacionado.</p>
+            ) : (
+              <div className="space-y-2">
+                {relatedVideos.map((v, i) => (
+                  <div key={i} className="grid gap-2 rounded-xl border border-border/60 p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                    <input value={v.url} placeholder="URL do vídeo" className={inputClass}
+                      onChange={(e) => setRelatedVideos((arr) => arr.map((x, idx) => (idx === i ? { ...x, url: e.target.value } : x)))} />
+                    <input value={v.caption} placeholder="Legenda (opcional)" className={inputClass}
+                      onChange={(e) => setRelatedVideos((arr) => arr.map((x, idx) => (idx === i ? { ...x, caption: e.target.value } : x)))} />
+                    <div className="flex gap-1">
+                      <button type="button" onClick={() => setPicker({ kind: "relvideo", index: i })} className="rounded-full border border-border px-3 py-1.5 text-[11px]">Escolher</button>
+                      <button type="button" onClick={() => setRelatedVideos((arr) => arr.filter((_, idx) => idx !== i))} className="rounded-full border border-destructive/50 p-1.5"><Trash2 className="h-3 w-3" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs uppercase tracking-wider text-muted-foreground">Corpo da matéria</span>
@@ -549,11 +604,13 @@ function EditorModal({
 
       {picker && (
         <MediaPicker
-          accept={picker.kind === "cover" ? "image/*" : "image/*,video/*"}
+          accept={picker.kind === "cover" ? "image/*" : picker.kind === "relvideo" ? "video/*" : "image/*,video/*"}
           onClose={() => setPicker(null)}
           onSelect={(a) => {
             if (picker.kind === "cover") set("cover_image", a.url);
-            else {
+            else if (picker.kind === "relvideo") {
+              setRelatedVideos((arr) => arr.map((x, idx) => (idx === picker.index ? { ...x, url: a.url } : x)));
+            } else {
               const type = a.mimeType.startsWith("video/") ? "video" : "image";
               updateBlock(picker.index, { type, url: a.url } as any);
             }

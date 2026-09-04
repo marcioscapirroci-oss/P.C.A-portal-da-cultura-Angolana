@@ -5,6 +5,7 @@ import { Loader2, Upload, X, Image as ImageIcon, Film } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { listMediaAssets, signMediaUpload } from "@/lib/media.functions";
+import { compressImage } from "@/lib/media-upload";
 
 type Asset = {
   path: string;
@@ -34,17 +35,17 @@ export function MediaPicker({
     }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-      const safe = file.name.replace(/[^a-zA-Z0-9.-]/g, "_").slice(-40);
+      const prepared = await compressImage(file);
+      const safe = prepared.name.replace(/[^a-zA-Z0-9.-]/g, "_").slice(-40);
       const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
-      const { error } = await supabase.storage.from("media").upload(path, file, {
-        contentType: file.type,
+      const { error } = await supabase.storage.from("media").upload(path, prepared, {
+        contentType: prepared.type,
         cacheControl: "31536000",
         upsert: false,
       });
       if (error) throw error;
       const { url } = await sign({ data: { path } });
-      onSelect({ url, mimeType: file.type });
+      onSelect({ url, mimeType: prepared.type });
       toast.success("Ficheiro enviado");
       libQ.refetch();
     } catch (e: any) {

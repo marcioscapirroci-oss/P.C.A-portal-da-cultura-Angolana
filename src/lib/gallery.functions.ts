@@ -10,6 +10,9 @@ export type GalleryItem = {
   mimeType: string;
   size: number;
   createdAt: string | null;
+  caption?: string | null;
+  credit?: string | null;
+  gallery?: string | null;
 };
 
 function classify(mime: string, name: string): GalleryItem["type"] {
