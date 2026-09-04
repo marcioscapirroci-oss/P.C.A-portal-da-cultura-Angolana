@@ -155,6 +155,8 @@ function ArticlePage() {
         )}
 
 
+        <ArticleGallery gallery={gallery ?? null} relatedVideos={relatedVideos ?? []} />
+
         {article.id && <ArticleEngagement articleId={article.id} />}
       </article>
 
