@@ -5,6 +5,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { ArticleEngagement } from "@/components/ArticleEngagement";
 import { useSiteSettings } from "@/lib/site-settings";
 import { getPublishedArticle } from "@/lib/public-articles.functions";
+import { getGalleryByArticle, type GalleryRecord } from "@/lib/galleries.functions";
+import { ArticleGallery } from "@/components/ArticleGallery";
 import { blocksFromLegacyContent, normalizeBlocks, type ContentBlock } from "@/lib/article-blocks";
 
 
@@ -12,7 +14,12 @@ export const Route = createFileRoute("/artigo/$slug")({
   loader: async ({ params }) => {
     const { article: dbArticle } = await getPublishedArticle({ data: { slug: params.slug } });
     if (dbArticle) {
+      const gallery = (dbArticle as any).gallery_id
+        ? (await getGalleryByArticle({ data: { articleId: dbArticle.id } })).gallery
+        : null;
       return {
+        gallery: gallery as GalleryRecord | null,
+        relatedVideos: (Array.isArray((dbArticle as any).related_videos) ? (dbArticle as any).related_videos : []) as { url: string; caption?: string }[],
         article: {
           id: dbArticle.id,
           slug: dbArticle.slug,
@@ -32,7 +39,7 @@ export const Route = createFileRoute("/artigo/$slug")({
 
       };
     }
-    return { article: null };
+    return { article: null, gallery: null, relatedVideos: [] as { url: string; caption?: string }[] };
   },
   head: ({ loaderData }) => ({
     meta: loaderData?.article
@@ -63,7 +70,7 @@ export const Route = createFileRoute("/artigo/$slug")({
 
 
 function ArticlePage() {
-  const { article: dbArticle } = Route.useLoaderData();
+  const { article: dbArticle, gallery, relatedVideos } = Route.useLoaderData();
   const { slug } = Route.useParams();
   const { settings } = useSiteSettings();
   const fallback = settings.home.demo_articles.find((a) => a.slug === slug);

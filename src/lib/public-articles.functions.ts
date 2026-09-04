@@ -4,7 +4,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 const LIST_COLS = "id, slug, title, subtitle, excerpt, category, cover_image, published_at, views";
-const FULL_COLS = "id, slug, title, subtitle, excerpt, content, blocks, category, cover_image, published_at, views";
+const FULL_COLS = "id, slug, title, subtitle, excerpt, content, blocks, category, cover_image, published_at, views, gallery_id, related_videos";
 
 function publicClient() {
   return createClient<Database>(
