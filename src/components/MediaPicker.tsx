@@ -29,8 +29,8 @@ export function MediaPicker({
   const libQ = useQuery({ queryKey: ["media-library"], queryFn: () => list() });
 
   async function handleFile(file: File) {
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error("Ficheiro acima de 50MB");
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error("Ficheiro acima de 200MB");
       return;
     }
     setUploading(true);
@@ -69,7 +69,7 @@ export function MediaPicker({
         <label className="mt-5 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/50 bg-background/50 px-6 py-8 text-sm hover:bg-background">
           {uploading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Upload className="h-5 w-5 text-primary" />}
           <span className="text-muted-foreground">
-            {uploading ? "A enviar..." : "Carregar nova imagem ou vídeo (até 50MB)"}
+            {uploading ? "A enviar..." : "Carregar nova imagem ou vídeo (até 200MB)"}
           </span>
           <input
             type="file"
