@@ -319,8 +319,10 @@ function Lightbox({
 
       <div className="absolute inset-x-0 bottom-0 z-10 border-t border-white/10 bg-black/60 px-4 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-3">
+          {caption ? <p className="text-center text-sm text-white/90">{caption}</p> : null}
           <p className="text-center text-[11px] text-white/60">
             {index + 1} / {items.length} · <span className="text-white/80">{current.name}</span>
+            {credit ? <span> · Crédito: {credit}</span> : null}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <a
