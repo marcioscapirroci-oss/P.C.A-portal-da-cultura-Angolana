@@ -1,22 +1,40 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, Menu, Search, User, X } from "lucide-react";
+import { LogOut, Menu, Search, ShieldCheck, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/lib/site-settings";
 
+const STAFF_ROLES = new Set(["jornalista", "admin", "super_admin", "editor"]);
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
+  const [isStaff, setIsStaff] = useState(false);
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
 
   useEffect(() => {
     let mounted = true;
+
+    async function loadRoles(userId: string | null) {
+      if (!userId) {
+        if (mounted) setIsStaff(false);
+        return;
+      }
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      if (!mounted) return;
+      const roles = (data ?? []).map((r) => r.role as string);
+      setIsStaff(roles.some((r) => STAFF_ROLES.has(r)));
+    }
+
     supabase.auth.getUser().then(({ data }) => {
-      if (mounted) setEmail(data.user?.email ?? null);
+      if (!mounted) return;
+      setEmail(data.user?.email ?? null);
+      void loadRoles(data.user?.id ?? null);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user?.email ?? null);
+      void loadRoles(session?.user?.id ?? null);
     });
     return () => {
       mounted = false;
