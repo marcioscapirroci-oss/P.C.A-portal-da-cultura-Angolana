@@ -8,11 +8,7 @@ import { listPublishedArticles } from "@/lib/public-articles.functions";
 import { useSiteSettings } from "@/lib/site-settings";
 
 
-import hero640 from "@/assets/hero-analtino-640.webp.asset.json";
 import hero1280 from "@/assets/hero-analtino-1280.webp.asset.json";
-import hero1920 from "@/assets/hero-analtino-1920.webp.asset.json";
-
-const heroSrcSet = `${hero640.url} 640w, ${hero1280.url} 1280w, ${hero1920.url} 1920w`;
 
 const publishedQuery = queryOptions({
   queryKey: ["published-articles"],
@@ -28,9 +24,6 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "PCArt — Plataforma da Cultura Angolana" },
       { property: "og:description", content: "Entrevistas, reportagens e a cultura angolana em destaque." },
       { property: "og:image", content: hero1280.url },
-    ],
-    links: [
-      { rel: "preload", as: "image", href: hero1280.url, imagesrcset: heroSrcSet, imagesizes: "100vw", fetchpriority: "high" },
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publishedQuery),
@@ -70,7 +63,6 @@ function Home() {
   const videos = home.videos;
   const events = home.events;
 
-  const heroImage = home.hero_image || hero1280.url;
   const heroKicker = home.hero_kicker || (featured ? `${featured.category} · Em destaque` : "");
   const heroTitle = home.hero_title || featured?.title || settings.full_name;
   const heroText = home.hero_subtitle || featured?.excerpt || settings.description;
@@ -82,20 +74,10 @@ function Home() {
 
       {/* HERO */}
       <section className="relative">
-        <div className="relative h-[78vh] min-h-[560px] w-full overflow-hidden">
-          <img
-            src={heroImage}
-            {...(home.hero_image ? {} : { srcSet: heroSrcSet, sizes: "100vw" })}
-            alt={heroTitle}
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-            className="absolute inset-0 h-full w-full object-cover object-center motion-safe:animate-[heroZoom_18s_ease-out_forwards]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/55 to-background/90" />
-          <div className="absolute inset-0 bg-black/30" />
-          <div className="absolute inset-x-0 bottom-0">
-            <div className="mx-auto max-w-7xl container-px pb-12 md:pb-20">
+        <div className="relative w-full overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-card/60 via-background to-background" />
+          <div className="absolute -top-24 left-1/2 h-72 w-[42rem] max-w-full -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+          <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-center container-px py-20 md:py-32">
               {heroKicker && (
                 <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/40 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-primary backdrop-blur">
                   <Sparkles className="h-3 w-3" /> {heroKicker}
@@ -130,7 +112,6 @@ function Home() {
                   </span>
                 )}
               </div>
-            </div>
           </div>
         </div>
       </section>
