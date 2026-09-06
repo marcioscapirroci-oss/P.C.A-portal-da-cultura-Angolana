@@ -77,7 +77,7 @@ function Home() {
         <div className="relative w-full overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-card/60 via-background to-background" />
           <div className="absolute -top-24 left-1/2 h-72 w-[42rem] max-w-full -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-          <div className="relative mx-auto flex max-w-7xl flex-col justify-center container-px py-20 md:py-32">
+          <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-center container-px py-20 md:py-32">
               {heroKicker && (
                 <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-background/40 px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-primary backdrop-blur">
                   <Sparkles className="h-3 w-3" /> {heroKicker}
