@@ -1,22 +1,40 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, Menu, Search, User, X } from "lucide-react";
+import { LogOut, Menu, Search, ShieldCheck, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteSettings } from "@/lib/site-settings";
 
+const STAFF_ROLES = new Set(["jornalista", "admin", "super_admin", "editor"]);
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
+  const [isStaff, setIsStaff] = useState(false);
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
 
   useEffect(() => {
     let mounted = true;
+
+    async function loadRoles(userId: string | null) {
+      if (!userId) {
+        if (mounted) setIsStaff(false);
+        return;
+      }
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      if (!mounted) return;
+      const roles = (data ?? []).map((r) => r.role as string);
+      setIsStaff(roles.some((r) => STAFF_ROLES.has(r)));
+    }
+
     supabase.auth.getUser().then(({ data }) => {
-      if (mounted) setEmail(data.user?.email ?? null);
+      if (!mounted) return;
+      setEmail(data.user?.email ?? null);
+      void loadRoles(data.user?.id ?? null);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user?.email ?? null);
+      void loadRoles(session?.user?.id ?? null);
     });
     return () => {
       mounted = false;
@@ -87,6 +105,15 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {isStaff && (
+            <Link
+              to="/admin"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium uppercase tracking-wider text-primary-foreground shadow-elegant transition hover:opacity-90"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Painel Administrativo
+            </Link>
+          )}
           {email ? (
             <div className="hidden sm:flex items-center gap-2">
               <span className="hidden md:inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground">
@@ -134,6 +161,16 @@ export function SiteHeader() {
               onNavigate={() => setOpen(false)}
               className="border-b border-border/40 py-3 text-muted-foreground hover:text-foreground"
             />
+            {isStaff && (
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium uppercase tracking-wider text-primary-foreground shadow-elegant"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Painel Administrativo
+              </Link>
+            )}
             {email ? (
               <div className="flex items-center justify-between gap-3 py-3">
                 <span className="flex items-center gap-2 text-xs text-muted-foreground">
