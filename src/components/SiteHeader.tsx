@@ -161,6 +161,16 @@ export function SiteHeader() {
               onNavigate={() => setOpen(false)}
               className="border-b border-border/40 py-3 text-muted-foreground hover:text-foreground"
             />
+            {isStaff && (
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium uppercase tracking-wider text-primary-foreground shadow-elegant"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Painel Administrativo
+              </Link>
+            )}
             {email ? (
               <div className="flex items-center justify-between gap-3 py-3">
                 <span className="flex items-center gap-2 text-xs text-muted-foreground">
