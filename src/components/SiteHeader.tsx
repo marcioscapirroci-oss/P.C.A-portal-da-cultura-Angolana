@@ -105,6 +105,15 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {isStaff && (
+            <Link
+              to="/admin"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-gold px-4 py-2 text-xs font-medium uppercase tracking-wider text-primary-foreground shadow-elegant transition hover:opacity-90"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Painel Administrativo
+            </Link>
+          )}
           {email ? (
             <div className="hidden sm:flex items-center gap-2">
               <span className="hidden md:inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground">
