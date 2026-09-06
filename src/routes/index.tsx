@@ -8,11 +8,7 @@ import { listPublishedArticles } from "@/lib/public-articles.functions";
 import { useSiteSettings } from "@/lib/site-settings";
 
 
-import hero640 from "@/assets/hero-analtino-640.webp.asset.json";
 import hero1280 from "@/assets/hero-analtino-1280.webp.asset.json";
-import hero1920 from "@/assets/hero-analtino-1920.webp.asset.json";
-
-const heroSrcSet = `${hero640.url} 640w, ${hero1280.url} 1280w, ${hero1920.url} 1920w`;
 
 const publishedQuery = queryOptions({
   queryKey: ["published-articles"],
@@ -28,9 +24,6 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "PCArt — Plataforma da Cultura Angolana" },
       { property: "og:description", content: "Entrevistas, reportagens e a cultura angolana em destaque." },
       { property: "og:image", content: hero1280.url },
-    ],
-    links: [
-      { rel: "preload", as: "image", href: hero1280.url, imagesrcset: heroSrcSet, imagesizes: "100vw", fetchpriority: "high" },
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(publishedQuery),
