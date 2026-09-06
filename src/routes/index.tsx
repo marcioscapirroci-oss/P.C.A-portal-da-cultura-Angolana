@@ -63,7 +63,6 @@ function Home() {
   const videos = home.videos;
   const events = home.events;
 
-  const heroImage = home.hero_image || hero1280.url;
   const heroKicker = home.hero_kicker || (featured ? `${featured.category} · Em destaque` : "");
   const heroTitle = home.hero_title || featured?.title || settings.full_name;
   const heroText = home.hero_subtitle || featured?.excerpt || settings.description;
