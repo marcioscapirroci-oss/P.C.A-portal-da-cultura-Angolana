@@ -48,7 +48,7 @@ export function SiteHeader() {
     navigate({ to: "/", replace: true });
   }
 
-  const linkClass = "text-muted-foreground transition-colors hover:text-foreground";
+  const linkClass = "text-[13px] font-medium uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-primary";
 
   function NavLinks({ onNavigate, className }: { onNavigate?: () => void; className?: string }) {
     return (
@@ -82,8 +82,8 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 container-px py-4">
+    <header className="sticky top-0 z-50 border-b-2 border-foreground bg-background/95 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 container-px py-3.5">
         <Link to="/" className="flex items-center gap-3 min-w-0">
           <img
             src="/pcart-logo.jpg"
