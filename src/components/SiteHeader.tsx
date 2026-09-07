@@ -48,7 +48,7 @@ export function SiteHeader() {
     navigate({ to: "/", replace: true });
   }
 
-  const linkClass = "text-muted-foreground transition-colors hover:text-foreground";
+  const linkClass = "text-[13px] font-medium uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-primary";
 
   function NavLinks({ onNavigate, className }: { onNavigate?: () => void; className?: string }) {
     return (
