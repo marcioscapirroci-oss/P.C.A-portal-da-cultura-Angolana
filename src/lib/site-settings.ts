@@ -6,7 +6,7 @@ export type NavItem = { label: string; to: string };
 export type CategoryItem = { label: string; slug: string };
 
 export type ArtistItem = { name: string; genre: string; slug: string; image: string; bio?: string };
-export type VideoItem = { title: string; duration: string; thumb: string };
+export type VideoItem = { title: string; duration: string; thumb: string; url?: string };
 export type EventItem = { date: string; title: string; city: string };
 export type ArticleItem = {
   slug: string;

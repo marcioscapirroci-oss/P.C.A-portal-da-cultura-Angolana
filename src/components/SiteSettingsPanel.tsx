@@ -267,6 +267,7 @@ export function SiteSettingsPanel() {
                   <input value={v.title} placeholder="Título" onChange={(e) => setHome("videos", home.videos.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} className={inputClass} />
                   <input value={v.duration} placeholder="Duração (ex: 08:12)" onChange={(e) => setHome("videos", home.videos.map((x, j) => (j === i ? { ...x, duration: e.target.value } : x)))} className={inputClass} />
                 </div>
+                <input value={v.url ?? ""} placeholder="URL do vídeo (opcional — ativa o leitor)" onChange={(e) => setHome("videos", home.videos.map((x, j) => (j === i ? { ...x, url: e.target.value } : x)))} className={inputClass} />
                 <ImageField label="Miniatura" value={v.thumb} onChange={(url) => setHome("videos", home.videos.map((x, j) => (j === i ? { ...x, thumb: url } : x)))} />
                 <button type="button" onClick={() => setHome("videos", home.videos.filter((_, j) => j !== i))} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
                   <Trash2 className="h-3.5 w-3.5" /> Remover vídeo
@@ -274,7 +275,7 @@ export function SiteSettingsPanel() {
               </div>
             ))}
           </div>
-          <button type="button" onClick={() => setHome("videos", [...home.videos, { title: "", duration: "", thumb: "" }])} className="mt-3 inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
+          <button type="button" onClick={() => setHome("videos", [...home.videos, { title: "", duration: "", thumb: "", url: "" }])} className="mt-3 inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
             <Plus className="h-3.5 w-3.5" /> Adicionar vídeo
           </button>
         </div>
