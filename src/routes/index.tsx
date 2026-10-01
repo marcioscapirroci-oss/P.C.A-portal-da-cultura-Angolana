@@ -46,6 +46,7 @@ function Home() {
   const { data } = useSuspenseQuery(publishedQuery);
   const { settings } = useSiteSettings();
   const home = settings.home;
+  const [playing, setPlaying] = useState<(typeof home.videos)[number] | null>(null);
 
   const published: FeedArticle[] = (data.articles ?? []).map((a) => ({
     slug: a.slug,
@@ -410,35 +411,54 @@ function Home() {
         <section className="border-t border-border/60 bg-card/30">
           <div className="mx-auto max-w-7xl container-px py-12 md:py-16">
             <SectionHeading title="Podcast & Multimédia" link="/galeria" linkLabel="Ver galeria" />
-            <div className="mt-8 grid gap-8 md:grid-cols-3">
-              {videos.map((v, i) => (
-                <div key={i} className="group cursor-pointer">
-                  <div className="relative aspect-video overflow-hidden bg-muted">
-                    {v.thumb && (
-                      <img
-                        src={v.thumb}
-                        alt={v.title}
-                        className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
-                      />
-                    )}
-                    <div className="absolute inset-0 grid place-items-center bg-background/40 opacity-0 transition group-hover:opacity-100">
-                      <span className="grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground">
-                        <Play className="h-5 w-5" fill="currentColor" />
-                      </span>
+            <div className="mt-8 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+              {videos.map((v, i) => {
+                const playable = Boolean(v.url);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    disabled={!playable}
+                    onClick={() => playable && setPlaying(v)}
+                    className={`group text-left ${playable ? "cursor-pointer" : "cursor-default"}`}
+                  >
+                    <div className="relative aspect-video overflow-hidden bg-muted">
+                      {v.thumb && (
+                        <img
+                          src={v.thumb}
+                          alt={v.title}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
+                        />
+                      )}
+                      <div className={`absolute inset-0 grid place-items-center bg-background/40 transition ${playable ? "opacity-0 group-hover:opacity-100" : "opacity-0"}`}>
+                        <span className="grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground">
+                          <Play className="h-5 w-5" fill="currentColor" />
+                        </span>
+                      </div>
+                      {v.duration && (
+                        <span className="absolute bottom-3 right-3 bg-background/85 px-2 py-0.5 text-[10px] font-medium tracking-wider text-foreground">
+                          {v.duration}
+                        </span>
+                      )}
                     </div>
-                    <span className="absolute bottom-3 right-3 bg-background/85 px-2 py-0.5 text-[10px] font-medium tracking-wider text-foreground">
-                      {v.duration}
-                    </span>
-                  </div>
-                  <p className="mt-3 font-display text-base leading-snug transition-colors group-hover:text-primary">
-                    {v.title}
-                  </p>
-                </div>
-              ))}
+                    <p className="mt-3 font-display text-base leading-snug transition-colors group-hover:text-primary">
+                      {v.title}
+                    </p>
+                    {playable && (
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-primary">
+                        <Play className="h-3 w-3" fill="currentColor" /> Reproduzir
+                      </p>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>
       )}
+
+      {playing?.url && <VideoPlayer video={playing} onClose={() => setPlaying(null)} />}
 
       {/* SOBRE O JORNALISTA */}
       {home.show_journalist && (
@@ -476,6 +496,62 @@ function Home() {
       )}
 
       <SiteFooter />
+    </div>
+  );
+}
+
+function VideoPlayer({
+  video,
+  onClose,
+}: {
+  video: { title: string; duration: string; thumb: string; url?: string };
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center bg-black/90 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={video.title}
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+        aria-label="Fechar"
+      >
+        <X className="h-5 w-5" />
+      </button>
+      <div className="w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+        <video
+          src={video.url}
+          poster={video.thumb || undefined}
+          controls
+          autoPlay
+          playsInline
+          preload="metadata"
+          className="aspect-video w-full bg-black"
+        />
+        <div className="mt-4 flex items-start justify-between gap-4">
+          <p className="font-display text-lg leading-snug text-white">{video.title}</p>
+          {video.duration && (
+            <span className="shrink-0 text-xs tracking-wider text-white/60">{video.duration}</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -102,62 +102,94 @@ function ArticlePage() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
 
-      <article className="mx-auto max-w-3xl container-px py-12 md:py-20">
-        <Link to="/" className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-3 w-3" /> Início
-        </Link>
+      <article className="py-10 md:py-16">
+        {/* Cabeçalho editorial */}
+        <header className="mx-auto max-w-4xl container-px">
+          <Link to="/" className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground transition hover:text-foreground">
+            <ArrowLeft className="h-3 w-3" /> Início
+          </Link>
 
-        <p className="mt-8 text-[11px] uppercase tracking-[0.3em] text-primary">{article.category}</p>
-        <h1 className="mt-3 font-display text-4xl leading-tight md:text-6xl">{article.title}</h1>
-        {article.subtitle && (
-          <p className="mt-4 font-display text-xl leading-snug text-foreground/80">{article.subtitle}</p>
-        )}
-        <p className="mt-6 text-lg leading-relaxed text-muted-foreground">{article.excerpt}</p>
+          <p className="mt-10 text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">{article.category}</p>
+          <h1 className="mt-4 font-display text-4xl leading-[1.08] tracking-tight md:text-6xl">{article.title}</h1>
+          {article.subtitle && (
+            <p className="mt-5 font-display text-xl leading-snug text-foreground/75 md:text-2xl">{article.subtitle}</p>
+          )}
+          {article.excerpt && (
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">{article.excerpt}</p>
+          )}
 
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-y border-border/60 py-4 text-xs text-muted-foreground">
-          <span>Por {article.author} · {article.date} · {article.readTime} de leitura</span>
-          <a href={wa} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 hover:text-foreground">
-            <Share2 className="h-3 w-3" /> Partilhar no WhatsApp
-          </a>
-        </div>
-
-        <div className="mt-8 overflow-hidden rounded-2xl shadow-elegant">
-          <img src={article.image} alt={article.title} className="h-full w-full object-cover" />
-        </div>
-
-        {blocks.length ? (
-          <div className="mt-10 space-y-6">
-            {blocks.map((b, i) =>
-              b.type === "text" ? (
-                <div key={i} className="prose prose-invert max-w-none text-base leading-[1.85] text-foreground/90">
-                  {b.text.split(/\n{2,}/).map((p, j) => (
-                    <p key={j}>{p}</p>
-                  ))}
-                </div>
-              ) : b.type === "image" ? (
-                <figure key={i}>
-                  <img src={b.url} alt={b.caption || article.title} className="w-full rounded-2xl" loading="lazy" />
-                  {b.caption && <figcaption className="mt-2 text-center text-xs text-muted-foreground">{b.caption}</figcaption>}
-                </figure>
-              ) : (
-                <figure key={i}>
-                  <video src={b.url} controls playsInline className="w-full rounded-2xl" />
-                  {b.caption && <figcaption className="mt-2 text-center text-xs text-muted-foreground">{b.caption}</figcaption>}
-                </figure>
-              ),
-            )}
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-y-2 border-foreground/90 py-4">
+            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">
+              Por <span className="font-semibold text-foreground">{article.author}</span>
+              {article.date && <> · {article.date}</>}
+              {article.readTime && <> · {article.readTime} de leitura</>}
+            </p>
+            <a
+              href={wa}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 border border-foreground px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] transition hover:bg-foreground hover:text-background"
+            >
+              <Share2 className="h-3.5 w-3.5" /> Partilhar
+            </a>
           </div>
-        ) : (
-          <div className="prose prose-invert mt-10 max-w-none text-base leading-[1.85] text-foreground/90">
-            <p>Conteúdo em preparação.</p>
-          </div>
+        </header>
+
+        {/* Imagem de capa */}
+        {article.image && (
+          <figure className="mx-auto mt-10 max-w-5xl container-px">
+            <img src={article.image} alt={article.title} className="w-full object-cover" />
+          </figure>
         )}
 
+        {/* Corpo da matéria */}
+        <div className="mx-auto mt-12 max-w-2xl container-px md:mt-16">
+          {blocks.length ? (
+            <div className="space-y-10">
+              {blocks.map((b, i) =>
+                b.type === "text" ? (
+                  <div key={i} className="space-y-6 text-[1.05rem] leading-[1.9] text-foreground/90">
+                    {b.text.split(/\n{2,}/).map((p, j) => (
+                      <p key={j} className={i === 0 && j === 0 ? "first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-6xl first-letter:leading-[0.85] first-letter:text-primary" : undefined}>
+                        {p}
+                      </p>
+                    ))}
+                  </div>
+                ) : b.type === "image" ? (
+                  <figure key={i} className="-mx-0 md:-mx-16">
+                    <img src={b.url} alt={b.caption || article.title} className="w-full object-cover" loading="lazy" />
+                    {b.caption && (
+                      <figcaption className="mt-3 border-l-2 border-primary pl-3 text-xs leading-relaxed text-muted-foreground md:mx-16">
+                        {b.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                ) : (
+                  <figure key={i}>
+                    <video src={b.url} controls playsInline preload="metadata" className="w-full bg-black" />
+                    {b.caption && (
+                      <figcaption className="mt-3 border-l-2 border-primary pl-3 text-xs leading-relaxed text-muted-foreground">
+                        {b.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                ),
+              )}
+            </div>
+          ) : (
+            <p className="text-[1.05rem] leading-[1.9] text-foreground/90">Conteúdo em preparação.</p>
+          )}
+        </div>
 
-        <ArticleGallery gallery={gallery ?? null} relatedVideos={relatedVideos ?? []} />
+        <div className="mx-auto mt-14 max-w-5xl container-px">
+          <ArticleGallery gallery={gallery ?? null} relatedVideos={relatedVideos ?? []} />
+        </div>
 
-        {article.id && <ArticleEngagement articleId={article.id} />}
+        {article.id && (
+          <div className="mx-auto mt-10 max-w-2xl container-px">
+            <ArticleEngagement articleId={article.id} />
+          </div>
+        )}
       </article>
 
       <SiteFooter />
