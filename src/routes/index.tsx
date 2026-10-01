@@ -500,6 +500,62 @@ function Home() {
   );
 }
 
+function VideoPlayer({
+  video,
+  onClose,
+}: {
+  video: { title: string; duration: string; thumb: string; url?: string };
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center bg-black/90 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={video.title}
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+        aria-label="Fechar"
+      >
+        <X className="h-5 w-5" />
+      </button>
+      <div className="w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+        <video
+          src={video.url}
+          poster={video.thumb || undefined}
+          controls
+          autoPlay
+          playsInline
+          preload="metadata"
+          className="aspect-video w-full bg-black"
+        />
+        <div className="mt-4 flex items-start justify-between gap-4">
+          <p className="font-display text-lg leading-snug text-white">{video.title}</p>
+          {video.duration && (
+            <span className="shrink-0 text-xs tracking-wider text-white/60">{video.duration}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SectionHeading({ title, link, linkLabel }: { title: string; link?: string; linkLabel?: string }) {
   return (
     <div className="flex items-end justify-between gap-4 border-b-2 border-foreground pb-4">
