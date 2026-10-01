@@ -46,6 +46,7 @@ function Home() {
   const { data } = useSuspenseQuery(publishedQuery);
   const { settings } = useSiteSettings();
   const home = settings.home;
+  const [playing, setPlaying] = useState<(typeof home.videos)[number] | null>(null);
 
   const published: FeedArticle[] = (data.articles ?? []).map((a) => ({
     slug: a.slug,
