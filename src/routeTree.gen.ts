@@ -9,53 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as FaleComJornalistaRouteImport } from './routes/fale-com-jornalista'
-import { Route as GaleriaRouteImport } from './routes/galeria'
-import { Route as PesquisaRouteImport } from './routes/pesquisa'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SobreRouteImport } from './routes/sobre'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as AuthenticatedMensagensRouteImport } from './routes/_authenticated/mensagens'
-import { Route as ArtigoSlugRouteImport } from './routes/artigo.$slug'
-import { Route as ArtistaSlugRouteImport } from './routes/artista.$slug'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PesquisaRouteImport } from './routes/pesquisa'
+import { Route as GaleriaRouteImport } from './routes/galeria'
+import { Route as FaleComJornalistaRouteImport } from './routes/fale-com-jornalista'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as CategoriaSlugRouteImport } from './routes/categoria.$slug'
+import { Route as ArtistaSlugRouteImport } from './routes/artista.$slug'
+import { Route as ArtigoSlugRouteImport } from './routes/artigo.$slug'
+import { Route as AuthenticatedMensagensRouteImport } from './routes/_authenticated/mensagens'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaleComJornalistaRoute = FaleComJornalistaRouteImport.update({
-  id: '/fale-com-jornalista',
-  path: '/fale-com-jornalista',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GaleriaRoute = GaleriaRouteImport.update({
-  id: '/galeria',
-  path: '/galeria',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PesquisaRoute = PesquisaRouteImport.update({
-  id: '/pesquisa',
-  path: '/pesquisa',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -63,24 +34,43 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SobreRoute = SobreRouteImport.update({
-  id: '/sobre',
-  path: '/sobre',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const PesquisaRoute = PesquisaRouteImport.update({
+  id: '/pesquisa',
+  path: '/pesquisa',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedMensagensRoute = AuthenticatedMensagensRouteImport.update({
-  id: '/mensagens',
-  path: '/mensagens',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const GaleriaRoute = GaleriaRouteImport.update({
+  id: '/galeria',
+  path: '/galeria',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ArtigoSlugRoute = ArtigoSlugRouteImport.update({
-  id: '/artigo/$slug',
-  path: '/artigo/$slug',
+const FaleComJornalistaRoute = FaleComJornalistaRouteImport.update({
+  id: '/fale-com-jornalista',
+  path: '/fale-com-jornalista',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriaSlugRoute = CategoriaSlugRouteImport.update({
+  id: '/categoria/$slug',
+  path: '/categoria/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArtistaSlugRoute = ArtistaSlugRouteImport.update({
@@ -88,10 +78,20 @@ const ArtistaSlugRoute = ArtistaSlugRouteImport.update({
   path: '/artista/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CategoriaSlugRoute = CategoriaSlugRouteImport.update({
-  id: '/categoria/$slug',
-  path: '/categoria/$slug',
+const ArtigoSlugRoute = ArtigoSlugRouteImport.update({
+  id: '/artigo/$slug',
+  path: '/artigo/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedMensagensRoute = AuthenticatedMensagensRouteImport.update({
+  id: '/mensagens',
+  path: '/mensagens',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -207,53 +207,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/fale-com-jornalista': {
-      id: '/fale-com-jornalista'
-      path: '/fale-com-jornalista'
-      fullPath: '/fale-com-jornalista'
-      preLoaderRoute: typeof FaleComJornalistaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/galeria': {
-      id: '/galeria'
-      path: '/galeria'
-      fullPath: '/galeria'
-      preLoaderRoute: typeof GaleriaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pesquisa': {
-      id: '/pesquisa'
-      path: '/pesquisa'
-      fullPath: '/pesquisa'
-      preLoaderRoute: typeof PesquisaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -263,32 +221,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sobre': {
-      id: '/sobre'
-      path: '/sobre'
-      fullPath: '/sobre'
-      preLoaderRoute: typeof SobreRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/pesquisa': {
+      id: '/pesquisa'
+      path: '/pesquisa'
+      fullPath: '/pesquisa'
+      preLoaderRoute: typeof PesquisaRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/mensagens': {
-      id: '/_authenticated/mensagens'
-      path: '/mensagens'
-      fullPath: '/mensagens'
-      preLoaderRoute: typeof AuthenticatedMensagensRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/galeria': {
+      id: '/galeria'
+      path: '/galeria'
+      fullPath: '/galeria'
+      preLoaderRoute: typeof GaleriaRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/artigo/$slug': {
-      id: '/artigo/$slug'
-      path: '/artigo/$slug'
-      fullPath: '/artigo/$slug'
-      preLoaderRoute: typeof ArtigoSlugRouteImport
+    '/fale-com-jornalista': {
+      id: '/fale-com-jornalista'
+      path: '/fale-com-jornalista'
+      fullPath: '/fale-com-jornalista'
+      preLoaderRoute: typeof FaleComJornalistaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categoria/$slug': {
+      id: '/categoria/$slug'
+      path: '/categoria/$slug'
+      fullPath: '/categoria/$slug'
+      preLoaderRoute: typeof CategoriaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/artista/$slug': {
@@ -298,12 +284,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArtistaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/categoria/$slug': {
-      id: '/categoria/$slug'
-      path: '/categoria/$slug'
-      fullPath: '/categoria/$slug'
-      preLoaderRoute: typeof CategoriaSlugRouteImport
+    '/artigo/$slug': {
+      id: '/artigo/$slug'
+      path: '/artigo/$slug'
+      fullPath: '/artigo/$slug'
+      preLoaderRoute: typeof ArtigoSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/mensagens': {
+      id: '/_authenticated/mensagens'
+      path: '/mensagens'
+      fullPath: '/mensagens'
+      preLoaderRoute: typeof AuthenticatedMensagensRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
