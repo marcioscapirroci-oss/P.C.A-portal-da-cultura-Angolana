@@ -40,7 +40,7 @@ export const Route = createFileRoute("/galeria")({
     <div className="min-h-screen grid place-items-center bg-background p-6 text-center">
       <div>
         <h1 className="font-display text-3xl">Não foi possível carregar a galeria</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{error instanceof Error ? error.message : String(error)}</p>
         <Link to="/" className="mt-6 inline-block rounded-full bg-gradient-gold px-5 py-2.5 text-sm text-primary-foreground">Voltar ao início</Link>
       </div>
     </div>
